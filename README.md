@@ -70,5 +70,5 @@ docker ps
 2. Виконайте команду для запусків тестів:
 
 ```
-docker exec -i [CONTAINER_ID] bash -c "cd /fastapi_app && python -m pytest"
+docker exec [CONTAINER_ID] python -m pytest
 ```
