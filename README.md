@@ -36,3 +36,39 @@ INFO:     Application startup complete.
 ```
 python -m pytest
 ```
+
+<h2>
+  Docker 
+</h2>
+
+<h3>
+  Запуск програми в Docker 
+</h3>
+
+1. Для запуску програми в Docker створіть Docker Image:
+
+```
+docker build . -t fastapi_app
+```
+
+2. Запустіть контейнер:
+
+```
+docker run -p 5000:5000 --name fastapi fastapi_app
+```
+
+<h3>
+  Запуск тестів у Docker
+</h3>
+
+1. Для запуску текстів спочатку дізнайтеся `CONTAINER_ID`:
+
+```
+docker ps
+```
+
+2. Виконайте команду для запусків тестів:
+
+```
+docker exec [CONTAINER_ID] python -m pytest
+```
