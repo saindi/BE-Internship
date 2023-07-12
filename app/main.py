@@ -35,6 +35,6 @@ if __name__ == "__main__":
     uvicorn.run(
         'main:app',
         reload=True,
-        host=global_settings.HOST,
-        port=global_settings.PORT
+        host=global_settings.host,
+        port=global_settings.port
     )

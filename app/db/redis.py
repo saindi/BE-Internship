@@ -1,10 +1,8 @@
 import redis.asyncio as redis
 
-import config
-
-global_settings = config.Settings()
+from main import global_settings
 
 
 async def init_redis_pool() -> redis.Redis:
-    redis_c = await redis.from_url(global_settings.REDIS_URL)
+    redis_c = await redis.from_url(global_settings.redis_url)
     return redis_c

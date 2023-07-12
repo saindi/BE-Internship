@@ -3,11 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-import config
+from main import global_settings
 
-global_settings = config.Settings()
-
-DATABASE_URL = global_settings.DATABASE_URL
+DATABASE_URL = global_settings.postgresql_url
 
 Base = declarative_base()
 

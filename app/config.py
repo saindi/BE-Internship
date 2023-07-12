@@ -1,21 +1,28 @@
-import os
-from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
-
-load_dotenv()
+from dotenv import find_dotenv
 
 
 class Settings(BaseSettings):
-    HOST: str = os.environ.get('HOST')
-    PORT: int = int(os.environ.get('PORT'))
+    host: str
+    port: int
 
-    DB_HOST: str = os.environ.get('DB_HOST')
-    DB_PORT: str = os.environ.get('DB_PORT')
-    DB_USERNAME: str = os.environ.get('DB_USERNAME')
-    DB_PASSWORD: str = os.environ.get('DB_PASSWORD')
-    DB_DATABASE: str = os.environ.get('DB_DATABASE')
-    DATABASE_URL: str = f"postgresql+asyncpg://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_DATABASE}"
+    db_host: str
+    db_port: str
+    db_username: str
+    db_password: str
+    db_database: str
 
-    REDIS_HOST: str = os.environ.get('REDIS_HOST')
-    REDIS_PORT: int = int(os.environ.get('REDIS_PORT'))
-    REDIS_URL: str = f"redis://{REDIS_HOST}:{REDIS_PORT}"
+    redis_host: str
+    redis_port: int
+
+    class Config:
+        env_file = find_dotenv()
+        env_file_encoding = 'utf-8'
+
+    @property
+    def postgresql_url(self) -> str:
+        return f"postgresql+asyncpg://{self.db_username}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_database}"
+
+    @property
+    def redis_url(self) -> str:
+        return f"redis://{self.redis_host}:{self.redis_port}"
