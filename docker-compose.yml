@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    env_file:
+      - .env-docker
+    ports:
+      - 5432:5432
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - 6379:6379
+
+  app:
+    build:
+      context: .
+    container_name: fastapi_app
+    env_file:
+      - .env-docker
+    ports:
+      - 5000:5000
+    depends_on:
+      - postgres
+      - redis

@@ -1,5 +1,7 @@
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
+from db.database import init_models
+from db.redis import init_redis_pool
 import uvicorn
 
 import config
@@ -7,7 +9,7 @@ import config
 app = FastAPI()
 
 origins = [
-    f"http://localhost:5000",
+    "http://localhost:5000",
 ]
 
 app.add_middleware(
@@ -18,9 +20,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.get("/")
 async def health_check():
+    # test db
+    await init_models()
+
+    # test redis
+    redis = await init_redis_pool()
+    await redis.set('a', 10)
+    value = await redis.get('a')
+    print(value)
+
     return {
         "status_code": status.HTTP_200_OK,
         "detail": "ok",
