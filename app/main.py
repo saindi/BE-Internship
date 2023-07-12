@@ -1,7 +1,5 @@
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
-from db.database import init_models
-from db.redis import init_redis_pool
 import uvicorn
 
 import config
