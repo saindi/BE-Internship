@@ -14,5 +14,3 @@ DB_DATABASE = os.environ.get('DB_DATABASE')
 
 REDIS_HOST = os.environ.get('REDIS_HOST')
 REDIS_PORT = int(os.environ.get('REDIS_PORT'))
-
-print(os.environ)
