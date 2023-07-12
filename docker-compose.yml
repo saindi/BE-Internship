@@ -4,23 +4,34 @@ services:
   postgres:
     image: postgres:15
     container_name: postgres
-    env_file:
-      - .env-docker
+    restart: on-failure
+    environment:
+      POSTGRES_DB: 'postgres'
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'postgres'
+    volumes:
+      - postgres_data:/var/lib/postgresql
     ports:
       - 5432:5432
+    networks:
+      - my-network
 
   redis:
     image: redis:7
     container_name: redis
+    restart: on-failure
+    volumes:
+      - redis_data:/data
     ports:
       - 6379:6379
+    networks:
+      - my-network
 
   app:
     build:
       context: .
     container_name: fastapi_app
-    env_file:
-      - .env-docker
+    restart: on-failure
     x-develop:
       watch:
         - action: sync
@@ -31,3 +42,13 @@ services:
     depends_on:
       - postgres
       - redis
+    networks:
+      - my-network
+
+networks:
+  my-network:
+    driver: "bridge"
+
+volumes:
+    postgres_data:
+    redis_data:
