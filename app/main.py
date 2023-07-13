@@ -4,10 +4,14 @@ import uvicorn
 
 import config
 
+
 app = FastAPI()
 
+global_settings = config.Settings()
+
+
 origins = [
-    f"http://localhost:5000",
+    "http://localhost:5000",
 ]
 
 app.add_middleware(
@@ -17,7 +21,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 @app.get("/")
 async def health_check():
@@ -32,6 +35,6 @@ if __name__ == "__main__":
     uvicorn.run(
         'main:app',
         reload=True,
-        host=config.HOST,
-        port=config.PORT
+        host=global_settings.host,
+        port=global_settings.port
     )
