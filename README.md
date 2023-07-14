@@ -72,3 +72,19 @@ docker ps
 ```
 docker exec [CONTAINER_ID] python -m pytest
 ```
+
+<h2>
+  Міграції
+</h2>
+
+Для запуску міграцій виконайте цю команду, вказавши потрібну `revision` бази даних:
+
+```
+alembic upgrade [revision]
+```
+
+або виконайте найостаннішу ревізію:
+
+```
+alembic upgrade head
+```

@@ -2,8 +2,11 @@ from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
+from log import AppLogger
 import config
 
+
+logger = AppLogger.__call__().get_logger()
 
 app = FastAPI()
 
@@ -21,6 +24,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+async def startup_event():
+    logger.info("App startup...")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("App shutdown...")
+
 
 @app.get("/")
 async def health_check():
