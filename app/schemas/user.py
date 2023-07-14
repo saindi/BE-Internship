@@ -15,19 +15,21 @@ class User(BaseModel):
         orm_mode = True
 
 
-class SignInRequest(BaseModel):
+class UserData(BaseModel):
     email: str
     password: str
 
 
-class SignUpRequest(BaseModel):
-    email: str
-    password: str
+class SignInRequest(UserData):
+    pass
 
 
-class UserUpdateRequest(BaseModel):
-    email: str
-    password: str
+class SignUpRequest(UserData):
+    pass
+
+
+class UserUpdateRequest(UserData):
+    pass
 
 
 class UsersListResponse(BaseModel):
