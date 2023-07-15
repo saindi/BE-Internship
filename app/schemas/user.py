@@ -1,22 +1,23 @@
-from pydantic import BaseModel
-from typing import List
+from pydantic import BaseModel, EmailStr
+from datetime import datetime
+from pydantic import ConfigDict
+from pydantic_settings import SettingsConfigDict
 
 
-class User(BaseModel):
+class UserSchema(BaseModel):
     id: int
-    email: str
+    email: EmailStr
     hashed_password: str
-    registered_at: str
-    is_active: bool
-    is_superuser: bool
-    is_verified: bool
+    registered_at: datetime
+    is_active: bool = True
+    is_superuser: bool = False
+    is_verified: bool = False
 
-    class Config:
-        orm_mode = True
+    model_config = SettingsConfigDict(from_attributes=True)
 
 
 class UserData(BaseModel):
-    email: str
+    email: EmailStr
     password: str
 
 
@@ -30,11 +31,3 @@ class SignUpRequest(UserData):
 
 class UserUpdateRequest(UserData):
     pass
-
-
-class UsersListResponse(BaseModel):
-    users: List[User]
-
-
-class UserDetailResponse(BaseModel):
-    user: User

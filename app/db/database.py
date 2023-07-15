@@ -1,19 +1,25 @@
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-from main import global_settings
+from config import global_settings
 
-DATABASE_URL = global_settings.postgresql_url
+engine = create_async_engine(
+    global_settings.postgresql_url,
+    echo=True,
+    future=True
+)
 
-Base = declarative_base()
+async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False, future=True)
 
-engine = create_async_engine(DATABASE_URL, echo=True)
-
-async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+metadata = MetaData()
 
 
-async def get_session() -> AsyncSession:
+class Base(DeclarativeBase):
+    metadata = metadata
+
+
+async def get_async_session() -> AsyncSession:
     async with async_session() as session:
         yield session
