@@ -1,12 +1,9 @@
 FROM python:3.11
 
-RUN mkdir /app
+RUN mkdir /fastapi_app
 
-WORKDIR /app
+WORKDIR /fastapi_app
 
-COPY ./app .
-COPY requirements.txt .
-COPY .env .
-COPY app.sh .
+COPY . .
 
 RUN pip install -r requirements.txt

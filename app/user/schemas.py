@@ -1,6 +1,5 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from pydantic import ConfigDict
 from pydantic_settings import SettingsConfigDict
 
 
@@ -8,7 +7,8 @@ class UserSchema(BaseModel):
     id: int
     email: EmailStr
     hashed_password: str
-    registered_at: datetime
+    created_at: datetime
+    updated_at: datetime
     is_active: bool = True
     is_superuser: bool = False
     is_verified: bool = False

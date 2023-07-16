@@ -4,7 +4,7 @@ import uvicorn
 
 from log import logger
 from config import global_settings
-from routers.user import router as user_router
+from user.router import router as user_router
 
 
 app = FastAPI()
