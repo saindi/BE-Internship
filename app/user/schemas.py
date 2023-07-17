@@ -31,3 +31,7 @@ class SignUpRequest(UserData):
 
 class UserUpdateRequest(UserData):
     pass
+
+
+class TokenSchema(BaseModel):
+    access_token: str
