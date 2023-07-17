@@ -14,12 +14,8 @@ from utils.hashing import Hasher
 TBase = TypeVar("TBase", bound="BaseModel")
 
 
-class BaseModel(Base):
+class BaseCRUD(Base):
     __abstract__ = True
-
-    id = Column(Integer, primary_key=True, index=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     @classmethod
     async def get_all(cls: Type[TBase], db: AsyncSession, skip: int = 0, limit: int = 100) -> List[TBase]:
@@ -73,3 +69,11 @@ class BaseModel(Base):
         await db.commit()
 
         return {'detail': f'Success delete {cls.__tablename__}'}
+
+
+class BaseModel(BaseCRUD):
+    __abstract__ = True
+
+    id = Column(Integer, primary_key=True, index=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
