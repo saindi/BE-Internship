@@ -1,12 +1,11 @@
+import os
 import logging
 
+current_file = os.path.abspath(__file__)
 
-class AppLogger:
-    _logger = None
+project_root = os.path.dirname(current_file)
 
-    def __init__(self):
-        logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
-        self._logger = logging.getLogger(__name__)
+logging_conf_path = os.path.join(project_root, 'logging.conf')
 
-    def get_logger(self):
-        return self._logger
+logging.config.fileConfig(logging_conf_path, disable_existing_loggers=False)
+logger = logging.getLogger(__name__)
