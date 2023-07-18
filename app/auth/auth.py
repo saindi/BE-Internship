@@ -3,7 +3,6 @@ import jwt
 
 from fastapi import Request, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-
 from config import global_settings
 from auth.schemas import TokenSchema
 from db.database import async_session
@@ -57,3 +56,6 @@ class JWTBearer(HTTPBearer):
             return decoded_token if decoded_token["expires"] >= time.time() else None
         except jwt.exceptions.DecodeError as err:
             return None
+
+
+jwt_bearer = JWTBearer()

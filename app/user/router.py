@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.auth import JWTBearer
+from auth.auth import jwt_bearer
 from db.database import get_async_session
 from user.schemas import UserSchema, UserCreateRequest, UserUpdateRequest, UserNewData
 from user.models import UserModel
@@ -12,14 +12,14 @@ from utils.hashing import Hasher
 router = APIRouter(prefix='/user')
 
 
-@router.get("/", response_model=List[UserSchema], dependencies=[Depends(JWTBearer())])
+@router.get("/", response_model=List[UserSchema], dependencies=[Depends(jwt_bearer)])
 async def get_users(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_async_session)):
     users = await UserModel.get_all(db, skip, limit)
 
     return users
 
 
-@router.get("/{user_id}", response_model=UserSchema, dependencies=[Depends(JWTBearer())])
+@router.get("/{user_id}", response_model=UserSchema, dependencies=[Depends(jwt_bearer)])
 async def get_user_by_id(user_id: int, db: AsyncSession = Depends(get_async_session)):
     users = await UserModel.get_by_id(db, user_id)
 
@@ -43,7 +43,7 @@ async def create_user(request: UserCreateRequest, db: AsyncSession = Depends(get
 async def update_user(
         user_id: int,
         data: UserUpdateRequest,
-        user: UserModel = Depends(JWTBearer()),
+        user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
     if not user.can_edit(user_id):
@@ -57,7 +57,7 @@ async def update_user(
 @router.delete("/{user_id}")
 async def delete_user(
         user_id: int,
-        user: UserModel = Depends(JWTBearer()),
+        user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
     if not user.can_delete(user_id):

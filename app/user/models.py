@@ -18,7 +18,7 @@ class UserModel(BaseModel):
         return Hasher.verify_password(hashed_password, self.hashed_password)
 
     def can_edit(self, user_id: int) -> bool:
-        return self.id == user_id
+        return self.id == user_id or self.is_superuser
 
     def can_delete(self, user_id: int) -> bool:
-        return self.id == user_id
+        return self.id == user_id or self.is_superuser
