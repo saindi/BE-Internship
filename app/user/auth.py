@@ -1,18 +1,11 @@
-# This file is responsible for signing , encoding , decoding and returning JWTS
 import time
-from typing import Dict
 
 import jwt
 from config import global_settings
+from user.schemas import TokenSchema
 
 
-def token_response(token: str):
-    return {
-        "access_token": token
-    }
-
-
-def sign_jwt(email: str, password: str) -> Dict[str, str]:
+def sign_jwt(email: str, password: str) -> TokenSchema:
     payload = {
         "email": email,
         "password": password,
@@ -20,7 +13,7 @@ def sign_jwt(email: str, password: str) -> Dict[str, str]:
     }
     token = jwt.encode(payload, global_settings.jwt_secret, algorithm=global_settings.jwt_algorithm)
 
-    return token_response(token)
+    return TokenSchema(access_token=token)
 
 
 def decode_jwt(token: str) -> dict:

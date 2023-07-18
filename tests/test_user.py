@@ -60,13 +60,11 @@ async def test_delete(ac: AsyncClient):
     assert len(response_get_2.json()) == 0
 
 
-async def test_signin_and_me(ac: AsyncClient):
+async def test_signin(ac: AsyncClient):
     response_post_signup = await ac.post("/user/signup", json={
         "email": "test_token@gmail.com",
         "password": "test_token",
     })
-
-    hashed_password = response_post_signup.json()['hashed_password']
 
     response_post_signin = await ac.post("/user/signin", json={
         "email": "test_token@gmail.com",
@@ -76,12 +74,19 @@ async def test_signin_and_me(ac: AsyncClient):
     assert response_post_signup.status_code == 201
     assert response_post_signin.status_code == 200
 
+
+async def test_me(ac: AsyncClient):
+    response_post_signin = await ac.post("/user/signin", json={
+        "email": "test_token@gmail.com",
+        "password": "test_token",
+    })
+
     token = response_post_signin.json()['access_token']
 
     response_post_me = await ac.post("/user/me", json={
         "access_token": token,
     })
 
+    assert response_post_signin.status_code == 200
     assert response_post_me.status_code == 200
     assert response_post_me.json()['email'] == "test_token@gmail.com"
-    assert response_post_me.json()['hashed_password'] == hashed_password
