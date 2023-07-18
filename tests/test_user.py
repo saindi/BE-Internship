@@ -3,8 +3,8 @@ from httpx import AsyncClient
 from utils.hashing import Hasher
 
 
-async def test_post(ac: AsyncClient):
-    response = await ac.post("/user/", json={
+async def test_signup(ac: AsyncClient):
+    response = await ac.post("/user/signup", json={
         "email": "test1@gmail.com",
         "password": "test",
     })
@@ -20,7 +20,7 @@ async def test_get(ac: AsyncClient):
 
 
 async def test_get_all(ac: AsyncClient):
-    response_post = await ac.post("/user/", json={
+    response_post = await ac.post("/user/signup", json={
         "email": "test2@gmail.com",
         "password": "test",
     })
@@ -58,3 +58,35 @@ async def test_delete(ac: AsyncClient):
     assert response_delete_2.status_code == 200
     assert response_get_2.status_code == 200
     assert len(response_get_2.json()) == 0
+
+
+async def test_signin(ac: AsyncClient):
+    response_post_signup = await ac.post("/user/signup", json={
+        "email": "test_token@gmail.com",
+        "password": "test_token",
+    })
+
+    response_post_signin = await ac.post("/user/signin", json={
+        "email": "test_token@gmail.com",
+        "password": "test_token",
+    })
+
+    assert response_post_signup.status_code == 201
+    assert response_post_signin.status_code == 200
+
+
+async def test_me(ac: AsyncClient):
+    response_post_signin = await ac.post("/user/signin", json={
+        "email": "test_token@gmail.com",
+        "password": "test_token",
+    })
+
+    token = response_post_signin.json()['access_token']
+
+    response_post_me = await ac.post("/user/me", json={
+        "access_token": token,
+    })
+
+    assert response_post_signin.status_code == 200
+    assert response_post_me.status_code == 200
+    assert response_post_me.json()['email'] == "test_token@gmail.com"

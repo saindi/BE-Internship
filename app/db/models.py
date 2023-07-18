@@ -3,13 +3,11 @@ from datetime import datetime
 import re
 
 from fastapi import status, HTTPException
-from sqlalchemy import select
-from sqlalchemy import Column, Integer, DateTime
+from sqlalchemy import Column, Integer, DateTime, and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 from db.database import Base
-from utils.hashing import Hasher
 
 TBase = TypeVar("TBase", bound="BaseModel")
 
@@ -37,6 +35,20 @@ class BaseCRUD(Base):
 
         return instance
 
+    @classmethod
+    async def get_by_fields(
+            cls: Type[TBase],
+            db: AsyncSession,
+            return_single: bool = True,
+            **kwargs
+    ) -> List[TBase]:
+        filters = [getattr(cls, field) == value for field, value in kwargs.items()]
+        query = select(cls).where(and_(*filters))
+        result = await db.execute(query)
+        instances = result.scalars().all()
+
+        return instances[0] if return_single else instances
+
     async def create(self, db: AsyncSession) -> TBase:
         try:
             db.add(self)
@@ -53,13 +65,18 @@ class BaseCRUD(Base):
     async def update(cls: Type[TBase], db: AsyncSession, obj_id: int, data) -> TBase:
         instance = await cls.get_by_id(db, obj_id)
 
-        instance.email = data.email
-        instance.hashed_password = Hasher.get_password_hash(data.password)
+        for key, value in dict(data).items():
+            setattr(instance, key, value)
 
-        await db.commit()
-        await db.refresh(instance)
+        try:
+            await db.commit()
+            await db.refresh(instance)
 
-        return instance
+            return instance
+
+        except IntegrityError as e:
+            detail = re.search(r'DETAIL: (.*)', e.orig.args[0])[1]
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
 
     @classmethod
     async def delete(cls: Type[TBase], db: AsyncSession, obj_id: int) -> Dict:
