@@ -43,14 +43,9 @@ async def create_user(request: UserCreateRequest, db: AsyncSession = Depends(get
 async def update_user(
         user_id: int,
         data: UserUpdateRequest,
-        token_data: list = Depends(JWTBearer()),
+        user: UserModel = Depends(JWTBearer()),
         db: AsyncSession = Depends(get_async_session)
 ):
-    user = await UserModel.get_by_fields(db, email=token_data['email'])
-
-    if not user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Incorrect data in token')
-
     if not user.can_edit(user_id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='This user cannot change the data')
 
@@ -62,14 +57,9 @@ async def update_user(
 @router.delete("/{user_id}")
 async def delete_user(
         user_id: int,
-        token_data: list = Depends(JWTBearer()),
+        user: UserModel = Depends(JWTBearer()),
         db: AsyncSession = Depends(get_async_session)
 ):
-    user = await UserModel.get_by_fields(db, email=token_data['email'])
-
-    if not user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Incorrect data in token')
-
     if not user.can_delete(user_id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='This user cannot delete')
 
