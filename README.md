@@ -1,24 +1,35 @@
 # Internship
-Це навчальний проєкт. Він виконаний із використанням Fastapi + PostgreSQL + Redis + AWS + Unittest + Docker.
+
+This is a training project. It was made using _Fastapi_ + _PostgreSQL_ + _Redis_ + _AWS_ + _Unittest_ + _Docker_.
+
 <h2>
-  Запуск програми 
+  Starting the program
 </h2>
 
-1. Завантажте кодову базу на локальну машину.
+1. Download the code base to your local machine:
+
 ```
 git clone https://github.com/saindi/internship.git
 ```
-2. Встановіть залежності за допомогою pip або poetry:
+
+2. Set dependencies using pip or poetry:
+   
    - pip:
+   
    ```
    pip install -r requirements.txt
    ```
+   
    - poetry:
+   
    ```
    poetry install
    ```
-3. Налаштуйте змінні оточення з файлу `.env.sample`
-4. Запустіть файл `app.main`. Вихідні дані повинні мати такий вигляд:
+   
+3. Configure environment variables from a file `.env.sample`
+
+4. Run the file `app.main`. The output should look like this:
+
 ```
 INFO:     Will watch for changes in these directories: ['D:\\Internship\\app']
 INFO:     Uvicorn running on http://127.0.0.1:5000 (Press CTRL+C to quit)
@@ -29,10 +40,10 @@ INFO:     Application startup complete.
  ```
 
 <h2>
-  Запуск тестів 
+  Run tests
 </h2>
 
-Для виконання текстів відкрийте консоль і введіть команду:
+To execute texts, open the console and enter the command:
 
 ```
 python -m pytest
@@ -43,48 +54,48 @@ python -m pytest
 </h2>
 
 <h3>
-  Запуск програми в Docker 
+  Running programs in Docker
 </h3>
 
-1. Для запуску програми в Docker створіть Docker Image:
+1. To run the program in Docker, create Docker Image:
 
 ```
 docker build . -t fastapi_app
 ```
 
-2. Запустіть контейнер:
+2. Start the container:
 
 ```
 docker run -p 5000:5000 --name fastapi fastapi_app
 ```
 
 <h3>
-  Запуск тестів у Docker
+  Running tests in Docker
 </h3>
 
-1. Для запуску текстів спочатку дізнайтеся `CONTAINER_ID`:
+1. To run texts, first find out `CONTAINER_ID`:
 
 ```
 docker ps
 ```
 
-2. Виконайте команду для запусків тестів:
+2. Run the command to run the tests:
 
 ```
 docker exec [CONTAINER_ID] python -m pytest
 ```
 
 <h2>
-  Міграції
+  Migration
 </h2>
 
-Для запуску міграцій виконайте цю команду, вказавши потрібну `revision` бази даних:
+To start migrations, run this command, specifying the desired `revision` of the database:
 
 ```
 alembic upgrade [revision]
 ```
 
-або виконайте найостаннішу ревізію:
+or perform the most recent audit:
 
 ```
 alembic upgrade head
