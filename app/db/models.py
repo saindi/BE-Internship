@@ -47,6 +47,9 @@ class BaseCRUD(Base):
         result = await db.execute(query)
         instances = result.scalars().all()
 
+        if not instances:
+            return None
+
         return instances[0] if return_single else instances
 
     async def create(self, db: AsyncSession) -> TBase:

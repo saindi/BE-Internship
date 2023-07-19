@@ -1,11 +1,16 @@
-from pydantic import BaseModel, EmailStr
 from datetime import datetime
+
+from pydantic_core.core_schema import FieldValidationInfo
+from pydantic import BaseModel, EmailStr, field_validator
 from pydantic_settings import SettingsConfigDict
+
+from utils.hashing import Hasher
 
 
 class UserSchema(BaseModel):
     id: int
     email: EmailStr
+    username: str
     hashed_password: str
     created_at: datetime
     updated_at: datetime
@@ -16,22 +21,33 @@ class UserSchema(BaseModel):
     model_config = SettingsConfigDict(from_attributes=True)
 
 
-class UserData(BaseModel):
-    email: EmailStr
+class UserNewData(BaseModel):
+    username: str
     password: str
+    password_confirm: str
+
+    @field_validator('password_confirm')
+    def passwords_match(cls, v, info: FieldValidationInfo):
+        if 'password' in info.data and v != info.data['password']:
+            raise ValueError('passwords do not match')
+        return v
 
 
-class SignInRequest(UserData):
+class UserCreateRequest(UserNewData):
+    email: EmailStr
+
+
+class UserUpdateRequest(UserNewData):
     pass
 
 
-class SignUpRequest(UserData):
-    pass
+class UserNewData:
+    username: str
+    hashed_password: str
 
+    def __init__(self, new_data: UserUpdateRequest):
+        self.username = new_data.username
+        self.hashed_password = Hasher.get_password_hash(new_data.password)
 
-class UserUpdateRequest(UserData):
-    pass
-
-
-class TokenSchema(BaseModel):
-    access_token: str
+    def __iter__(self):
+        return iter(vars(self).items())

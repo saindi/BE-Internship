@@ -3,40 +3,88 @@ from httpx import AsyncClient
 from utils.hashing import Hasher
 
 
-async def test_signup(ac: AsyncClient):
-    response = await ac.post("/user/signup", json={
-        "email": "test1@gmail.com",
-        "password": "test",
+async def test_create(ac: AsyncClient):
+    response_create = await ac.post("/user/", json={
+        "username": "test_create",
+        "email": "test_create@gmail.com",
+        "password": "test_create_password",
+        "password_confirm": "test_create_password",
     })
 
-    assert response.status_code == 201
+    assert response_create.status_code == 201
+    assert response_create.json()['email'] == "test_create@gmail.com"
+
+
+async def test_create_bad_password(ac: AsyncClient):
+    response = await ac.post("/user/", json={
+        "username": "bad_test",
+        "email": "test_bad@gmail.com",
+        "password": "test1",
+        "password_confirm": "test2",
+    })
+
+    assert response.status_code == 422
+    assert response.json()['detail'][0]['msg'] == "Value error, passwords do not match"
+
+
+async def test_create_bad_email(ac: AsyncClient):
+    response = await ac.post("/user/", json={
+        "username": "bad_email",
+        "email": "test_create@gmail.com",
+        "password": "bad_email",
+        "password_confirm": "bad_email",
+    })
+
+    assert response.status_code == 400
+    assert response.json()['detail'] == " Key (email)=(test_create@gmail.com) already exists."
 
 
 async def test_get(ac: AsyncClient):
-    response = await ac.get("/user/1")
+    response_login = await ac.post("/auth/login", json={
+        "email": "test_create@gmail.com",
+        "password": "test_create_password",
+    })
 
+    access_token = response_login.json()['access_token']
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    response = await ac.get("/user/2", headers=headers)
+
+    assert response_login.status_code == 200
     assert response.status_code == 200
-    assert response.json()["email"] == "test1@gmail.com"
+    assert response.json()["email"] == "test_create@gmail.com"
 
 
 async def test_get_all(ac: AsyncClient):
-    response_post = await ac.post("/user/signup", json={
-        "email": "test2@gmail.com",
-        "password": "test",
+    response_login = await ac.post("/auth/login", json={
+        "email": "test_create@gmail.com",
+        "password": "test_create_password",
     })
 
-    response_get = await ac.get("/user/")
+    access_token = response_login.json()['access_token']
+    headers = {"Authorization": f"Bearer {access_token}"}
 
-    assert response_post.status_code == 201
-    assert response_get.status_code == 200
-    assert len(response_get.json()) == 2
+    response = await ac.get("/user/", headers=headers)
 
-
+    assert response_login.status_code == 200
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+#
+#
 async def test_put(ac: AsyncClient):
+    response_login = await ac.post("/auth/login", json={
+        "email": "test_create@gmail.com",
+        "password": "test_create_password",
+    })
+
+    access_token = response_login.json()['access_token']
+    headers = {"Authorization": f"Bearer {access_token}"}
+
     response_put = await ac.put("/user/2", json={
         "email": "new@gmail.com",
         "password": "new",
-    })
+        "password_confirm": "new",
+    }, headers=headers)
 
     response_get = await ac.get("/user/2")
 
@@ -44,49 +92,74 @@ async def test_put(ac: AsyncClient):
     assert Hasher.verify_password("new", response_get.json()['hashed_password']) == True
 
 
+async def test_put(ac: AsyncClient):
+    response_login = await ac.post("/auth/login", json={
+        "email": "test_create@gmail.com",
+        "password": "test_create_password",
+    })
+
+    access_token = response_login.json()['access_token']
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    response_put = await ac.put("/user/2", json={
+        "username": "username",
+        "password": "new",
+        "password_confirm": "new",
+    }, headers=headers)
+
+    response_get = await ac.get("/user/2", headers=headers)
+
+    assert response_put.status_code == 201
+    assert response_get.json()['username'] == 'username'
+    assert Hasher.verify_password("new", response_get.json()['hashed_password']) == True
+
+
+async def test_put_bad(ac: AsyncClient):
+    response_login = await ac.post("/auth/login", json={
+        "email": "test_create@gmail.com",
+        "password": "new",
+    })
+
+    access_token = response_login.json()['access_token']
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    response_put = await ac.put("/user/3", json={
+        "username": "username",
+        "password": "new1",
+        "password_confirm": "new1",
+    }, headers=headers)
+
+    assert response_put.status_code == 400
+    assert response_put.json()["detail"] == "This user cannot change the data"
+
+
 async def test_delete(ac: AsyncClient):
-    response_delete_1 = await ac.delete("/user/1")
-    response_get_1 = await ac.get("/user/")
+    response_login = await ac.post("/auth/login", json={
+        "email": "test_create@gmail.com",
+        "password": "new",
+    })
 
-    assert response_delete_1.status_code == 200
-    assert response_get_1.status_code == 200
-    assert len(response_get_1.json()) == 1
+    access_token = response_login.json()['access_token']
+    headers = {"Authorization": f"Bearer {access_token}"}
 
-    response_delete_2 = await ac.delete("/user/2")
-    response_get_2 = await ac.get("/user/")
+    response = await ac.delete("/user/2", headers=headers)
 
-    assert response_delete_2.status_code == 200
-    assert response_get_2.status_code == 200
-    assert len(response_get_2.json()) == 0
+    assert response_login.status_code == 200
+    assert response.status_code == 200
+    assert response.json()["detail"] == "Success delete user"
 
 
-async def test_signin(ac: AsyncClient):
-    response_post_signup = await ac.post("/user/signup", json={
+async def test_delete_bad(ac: AsyncClient):
+    response_login = await ac.post("/auth/login", json={
         "email": "test_token@gmail.com",
-        "password": "test_token",
+        "password": "test_token_password",
     })
 
-    response_post_signin = await ac.post("/user/signin", json={
-        "email": "test_token@gmail.com",
-        "password": "test_token",
-    })
+    access_token = response_login.json()['access_token']
+    headers = {"Authorization": f"Bearer {access_token}"}
 
-    assert response_post_signup.status_code == 201
-    assert response_post_signin.status_code == 200
+    response = await ac.delete("/user/2", headers=headers)
 
-
-async def test_me(ac: AsyncClient):
-    response_post_signin = await ac.post("/user/signin", json={
-        "email": "test_token@gmail.com",
-        "password": "test_token",
-    })
-
-    token = response_post_signin.json()['access_token']
-
-    response_post_me = await ac.post("/user/me", json={
-        "access_token": token,
-    })
-
-    assert response_post_signin.status_code == 200
-    assert response_post_me.status_code == 200
-    assert response_post_me.json()['email'] == "test_token@gmail.com"
+    assert response_login.status_code == 200
+    assert response.status_code == 400
+    assert response.json()["detail"] == "This user cannot delete"
