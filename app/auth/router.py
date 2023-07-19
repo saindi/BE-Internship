@@ -11,7 +11,7 @@ router = APIRouter(prefix='/auth')
 
 
 @router.post("/login", response_model=TokenSchema)
-async def signin(request: LoginSchema, db: AsyncSession = Depends(get_async_session)):
+async def login(request: LoginSchema, db: AsyncSession = Depends(get_async_session)):
     user = await UserModel.get_by_fields(db, email=request.email)
 
     if not user or user.user_verification(request.password) == False:
@@ -20,6 +20,6 @@ async def signin(request: LoginSchema, db: AsyncSession = Depends(get_async_sess
     return jwt_bearer.sign_jwt(user.email)
 
 
-@router.get("/me", response_model=UserSchema, status_code=status.HTTP_200_OK)
-async def me(user: list = Depends(jwt_bearer)):
+@router.get("/me", response_model=UserSchema)
+async def me(user: UserModel = Depends(jwt_bearer)):
     return user
