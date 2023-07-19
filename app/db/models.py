@@ -40,10 +40,12 @@ class BaseCRUD(Base):
             cls: Type[TBase],
             db: AsyncSession,
             return_single: bool = True,
+            skip: int = 0,
+            limit: int = 100,
             **kwargs
     ) -> List[TBase]:
         filters = [getattr(cls, field) == value for field, value in kwargs.items()]
-        query = select(cls).where(and_(*filters))
+        query = select(cls).where(and_(*filters)).offset(skip).limit(limit)
         result = await db.execute(query)
         instances = result.scalars().all()
 
