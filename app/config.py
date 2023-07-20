@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     jwt_secret: str
     jwt_algorithm: str
 
+    auth0_domain: str
+    auth0_api_audience: str
+    auth0_issuer: str
+    auth0_algorithms: str
+
     model_config = SettingsConfigDict(env_file=find_dotenv())
 
     @property

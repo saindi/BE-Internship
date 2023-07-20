@@ -48,7 +48,7 @@ async def test_get(ac: AsyncClient):
     access_token = response_login.json()['access_token']
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    response = await ac.get("/user/2", headers=headers)
+    response = await ac.get("/user/3", headers=headers)
 
     assert response_login.status_code == 200
     assert response.status_code == 200
@@ -68,9 +68,9 @@ async def test_get_all(ac: AsyncClient):
 
     assert response_login.status_code == 200
     assert response.status_code == 200
-    assert len(response.json()) == 2
-#
-#
+    assert len(response.json()) == 3
+
+
 async def test_put(ac: AsyncClient):
     response_login = await ac.post("/auth/login", json={
         "email": "test_create@gmail.com",
@@ -101,13 +101,13 @@ async def test_put(ac: AsyncClient):
     access_token = response_login.json()['access_token']
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    response_put = await ac.put("/user/2", json={
+    response_put = await ac.put("/user/3", json={
         "username": "username",
         "password": "new",
         "password_confirm": "new",
     }, headers=headers)
 
-    response_get = await ac.get("/user/2", headers=headers)
+    response_get = await ac.get("/user/3", headers=headers)
 
     assert response_put.status_code == 201
     assert response_get.json()['username'] == 'username'
@@ -123,7 +123,7 @@ async def test_put_bad(ac: AsyncClient):
     access_token = response_login.json()['access_token']
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    response_put = await ac.put("/user/3", json={
+    response_put = await ac.put("/user/2", json={
         "username": "username",
         "password": "new1",
         "password_confirm": "new1",
@@ -142,7 +142,7 @@ async def test_delete(ac: AsyncClient):
     access_token = response_login.json()['access_token']
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    response = await ac.delete("/user/2", headers=headers)
+    response = await ac.delete("/user/3", headers=headers)
 
     assert response_login.status_code == 200
     assert response.status_code == 200

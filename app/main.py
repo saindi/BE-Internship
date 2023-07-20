@@ -6,6 +6,7 @@ from log import logger
 from config import global_settings
 from user.router import router as user_router
 from auth.router import router as auth_router
+from company.router import router as company_router
 
 
 app = FastAPI()
@@ -44,6 +45,7 @@ async def health_check():
 
 app.include_router(auth_router, tags=["auth"])
 app.include_router(user_router, tags=["user"])
+app.include_router(company_router, tags=["company"])
 
 
 if __name__ == "__main__":
