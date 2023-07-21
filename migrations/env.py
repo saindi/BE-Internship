@@ -9,6 +9,7 @@ from alembic import context
 
 from user.models import UserModel
 from company.models import CompanyModel
+from company.models import RoleModel
 from db.database import metadata
 from config import global_settings
 

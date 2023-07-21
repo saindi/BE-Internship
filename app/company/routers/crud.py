@@ -16,6 +16,9 @@ router = APIRouter(prefix='/company')
 async def get_companies(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_async_session)):
     companies = await CompanyModel.get_by_fields(db, return_single=False, skip=skip, limit=limit, is_hidden=False)
 
+    if not companies:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No records found')
+
     return companies
 
 
@@ -33,16 +36,13 @@ async def get_company_by_id(company_id: int, db: AsyncSession = Depends(get_asyn
 async def create_company(
         request: CompanyCreateRequest,
         user: UserModel = Depends(jwt_bearer),
-        db: AsyncSession = Depends(get_async_session)):
-    new_company = CompanyModel(
-        name=request.name,
-        description=request.description,
-        owner_id=user.id
-    )
+        db: AsyncSession = Depends(get_async_session)
+):
+    new_company = CompanyModel(**dict(request))
 
-    company = await new_company.create(db)
+    await new_company.create(db, user.id)
 
-    return company
+    return new_company
 
 
 @router.put("/{company_id}", response_model=CompanySchema, status_code=status.HTTP_201_CREATED)
@@ -57,13 +57,13 @@ async def update_company(
     if not company.user_can_edit(user.id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='This user cannot change the company')
 
-    company_update = await CompanyModel.update(db, company.id, data)
+    await company.update(db, data)
 
-    return company_update
+    return company
 
 
 @router.delete("/{company_id}")
-async def delete_user(
+async def delete_company(
         company_id: int,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
@@ -73,4 +73,4 @@ async def delete_user(
     if not company.user_can_delete(user.id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='This user cannot delete сompany')
 
-    return await CompanyModel.delete(db, company.id)
+    return await company.delete(db)

@@ -119,10 +119,7 @@ class JWTBearer(HTTPBearer):
 
             return decoded_token if decoded_token["exp"] >= time.time() else None
 
-        except jwt.exceptions.DecodeError as err:
-            return None
-
-        except jwt.exceptions.InvalidAlgorithmError as err:
+        except:
             return None
 
 

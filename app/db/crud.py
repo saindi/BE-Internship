@@ -39,8 +39,8 @@ class BaseCRUD(Base):
             cls: Type[TBase],
             db: AsyncSession,
             return_single: bool = True,
-            skip: int = 0,
-            limit: int = 100,
+            skip: int = None,
+            limit: int = None,
             **kwargs
     ) -> List[TBase]:
         filters = [getattr(cls, field) == value for field, value in kwargs.items()]
@@ -59,34 +59,24 @@ class BaseCRUD(Base):
             await db.commit()
             await db.refresh(self)
 
-            return self
-
         except IntegrityError as e:
             detail = re.search(r'DETAIL: (.*)', e.orig.args[0])[1]
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
 
-    @classmethod
-    async def update(cls: Type[TBase], db: AsyncSession, obj_id: int, data) -> TBase:
-        instance = await cls.get_by_id(db, obj_id)
-
+    async def update(self, db: AsyncSession, data) -> TBase:
         for key, value in dict(data).items():
-            setattr(instance, key, value)
+            setattr(self, key, value)
 
         try:
             await db.commit()
-            await db.refresh(instance)
-
-            return instance
+            await db.refresh(self)
 
         except IntegrityError as e:
             detail = re.search(r'DETAIL: (.*)', e.orig.args[0])[1]
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
 
-    @classmethod
-    async def delete(cls: Type[TBase], db: AsyncSession, obj_id: int) -> Dict:
-        instance = await cls.get_by_id(db, obj_id)
-
-        await db.delete(instance)
+    async def delete(self, db: AsyncSession) -> Dict:
+        await db.delete(self)
         await db.commit()
 
-        return {'detail': f'Success delete {cls.__tablename__}'}
+        return {'detail': f'Success delete {self.__tablename__}'}

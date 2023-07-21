@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 from pydantic_settings import SettingsConfigDict
 
-from user.schemas import UserSchema
+from company.models import RoleEnum
 
 
 class CompanySchema(BaseModel):
@@ -11,11 +11,8 @@ class CompanySchema(BaseModel):
     name: str
     description: str
     is_hidden: bool
-    owner_id: int
     created_at: datetime
     updated_at: datetime
-
-    owner: UserSchema
 
     model_config = SettingsConfigDict(from_attributes=True)
 
@@ -31,3 +28,29 @@ class CompanyCreateRequest(CompanyData):
 
 class CompanyUpdateRequest(CompanyData):
     is_hidden: bool
+
+
+class InvitationSchema(BaseModel):
+    id: int
+    id_company: int
+    id_user: int
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = SettingsConfigDict(from_attributes=True)
+
+
+class RequestSchema(BaseModel):
+    id: int
+    id_company: int
+    id_user: int
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = SettingsConfigDict(from_attributes=True)
+
+
+class RoleSchema(BaseModel):
+    id_company: int
+    id_user: int
+    role: RoleEnum

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.auth import jwt_bearer
+from company.models import RoleModel, RoleEnum
 from db.database import get_async_session
 from user.schemas import UserSchema, UserCreateRequest, UserUpdateRequest, UserNewData
 from user.models import UserModel
@@ -34,9 +35,9 @@ async def create_user(request: UserCreateRequest, db: AsyncSession = Depends(get
         hashed_password=Hasher.get_password_hash(request.password)
     )
 
-    user = await new_user.create(db)
+    await new_user.create(db)
 
-    return user
+    return new_user
 
 
 @router.put("/{user_id}", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
@@ -46,12 +47,14 @@ async def update_user(
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
-    if not user.can_edit(user_id):
+    affected_user = await UserModel.get_by_id(db, user_id)
+
+    if not user.can_edit(affected_user.id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='This user cannot change the data')
 
-    user_update = await UserModel.update(db, user_id, UserNewData(data))
+    await affected_user.update(db, UserNewData(data))
 
-    return user_update
+    return user
 
 
 @router.delete("/{user_id}")
@@ -60,7 +63,14 @@ async def delete_user(
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
-    if not user.can_delete(user_id):
+    affected_user = await UserModel.get_by_id(db, user_id)
+
+    roles = await RoleModel.get_by_fields(db, False, id_user=affected_user.id, role=RoleEnum.owner)
+
+    if roles:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='First, delete the companies where you are the creator.')
+
+    if not user.can_delete(affected_user.id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='This user cannot delete')
 
-    return await UserModel.delete(db, user_id)
+    return await affected_user.delete(db)
