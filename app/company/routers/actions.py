@@ -16,10 +16,12 @@ router = APIRouter(prefix='/company')
 @router.get("/{company_id}/users/", response_model=List[UserSchema])
 async def get_requests(
         company_id: int,
+        skip: int = 0,
+        limit: int = 100,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
-    company = await CompanyModel.get_by_id(db, company_id)
+    company = await CompanyModel.get_by_fields(db, skip=skip, limit=limit, id=company_id)
 
     if not company.is_owner(user.id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')

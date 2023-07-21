@@ -13,8 +13,8 @@ router = APIRouter(prefix='/user')
 
 
 @router.get("/companies/", response_model=List[CompanySchema])
-async def get_requests(user: UserModel = Depends(jwt_bearer)):
-    return user.companies
+async def get_requests(skip: int = 0, limit: int = 100, user: UserModel = Depends(jwt_bearer)):
+    return user.companies[skip:limit]
 
 
 @router.get("/company/{company_id}/exit", response_model=List[CompanySchema])
