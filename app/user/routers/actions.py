@@ -29,7 +29,7 @@ async def exit_from_company(
     if not role:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You're not a member of the company")
 
-    if role.role == RoleEnum.owner:
+    if role.role == RoleEnum.OWNER:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Owner can't get out of his company")
 
     return await role.delete(db)
@@ -83,7 +83,7 @@ async def accept_invitation(
     if not invite:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invite not found")
 
-    role = RoleModel(id_user=invite.id_user, id_company=invite.id_company, role=RoleEnum.member)
+    role = RoleModel(id_user=invite.id_user, id_company=invite.id_company, role=RoleEnum.MEMBER)
 
     await role.create(db)
 

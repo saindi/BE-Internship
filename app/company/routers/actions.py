@@ -46,7 +46,7 @@ async def kick_user(
     if not company.is_owner(user.id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No kick permission.')
 
-    if kick_role.role == RoleEnum.owner:
+    if kick_role.role == RoleEnum.OWNER:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='The owner of a company can not kick himself.')
 
     return await kick_role.delete(db)
@@ -131,7 +131,7 @@ async def get_requests(
 
     request = await RequestModel.get_by_id(db, request_id)
 
-    new_role = RoleModel(id_user=request.id_user, id_company=request.id_company, role=RoleEnum.member)
+    new_role = RoleModel(id_user=request.id_user, id_company=request.id_company, role=RoleEnum.MEMBER)
 
     await new_role.create(db)
 

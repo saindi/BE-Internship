@@ -9,9 +9,9 @@ from db.models import BaseModel
 
 
 class RoleEnum(enum.Enum):
-    owner = "owner"
-    admin = "admin"
-    member = "member"
+    OWNER = "owner"
+    ADMIN = "admin"
+    MEMBER = "member"
 
 
 class RoleModel(BaseModel):
@@ -40,7 +40,7 @@ class CompanyModel(BaseModel):
         new_role = RoleModel(
             id_company=self.id,
             id_user=owner_id,
-            role=RoleEnum.owner
+            role=RoleEnum.OWNER
         )
 
         await new_role.create(db)
@@ -63,7 +63,7 @@ class CompanyModel(BaseModel):
 
     def get_owner_id(self) -> int or None:
         for role in self.roles:
-            if role.role == RoleEnum.owner:
+            if role.role == RoleEnum.OWNER:
                 return role.id_user
 
         return None
