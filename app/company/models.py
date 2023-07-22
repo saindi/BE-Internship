@@ -9,9 +9,9 @@ from db.models import BaseModel
 
 
 class RoleEnum(enum.Enum):
-    OWNER = "owner"
-    ADMIN = "admin"
-    MEMBER = "member"
+    OWNER = "OWNER"
+    ADMIN = "ADMIN"
+    MEMBER = "MEMBER"
 
 
 class RoleModel(BaseModel):
@@ -34,6 +34,8 @@ class CompanyModel(BaseModel):
     invitations = relationship("InvitationModel", lazy="subquery", cascade="all, delete-orphan")
     requests = relationship("RequestModel", lazy="subquery", cascade="all, delete-orphan")
 
+
+class Company(CompanyModel):
     async def create(self, db: AsyncSession, owner_id: int):
         await super().create(db)
 

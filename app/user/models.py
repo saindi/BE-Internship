@@ -22,6 +22,8 @@ class UserModel(BaseModel):
     invitations = relationship("InvitationModel", lazy="subquery", cascade="all, delete-orphan")
     requests = relationship("RequestModel", lazy="subquery", cascade="all, delete-orphan")
 
+
+class User(UserModel):
     def user_verification(self, hashed_password):
         return Hasher.verify_password(hashed_password, self.hashed_password)
 
@@ -34,7 +36,8 @@ class UserModel(BaseModel):
     async def add_request_to_company(self, db, company):
         for user_company in self.companies:
             if user_company.id == company.id:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='You are already a member of this company')
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail='You are already a member of this company')
 
         for request in self.requests:
             if request.id_company == company.id:
@@ -42,7 +45,8 @@ class UserModel(BaseModel):
 
         for invite in self.invitations:
             if invite.id_company == company.id:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='You already have one of these invites, accept or decline it')
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail='You already have one of these invites, accept or decline it')
 
         new_request = RequestModel(id_user=self.id, id_company=company.id)
 
