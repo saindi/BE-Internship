@@ -4,9 +4,11 @@ import uvicorn
 
 from log import logger
 from config import global_settings
-from user.router import router as user_router
+from user.routers.crud import router as user_crud_router
+from user.routers.actions import router as user_actions_router
 from auth.router import router as auth_router
-from company.router import router as company_router
+from company.routers.crud import router as company_crud_router
+from company.routers.actions import router as company_actions_router
 
 
 app = FastAPI()
@@ -44,8 +46,13 @@ async def health_check():
 
 
 app.include_router(auth_router, tags=["auth"])
-app.include_router(user_router, tags=["user"])
-app.include_router(company_router, tags=["company"])
+
+app.include_router(user_actions_router, tags=["user_actions"])
+app.include_router(company_actions_router, tags=["company_actions"])
+
+app.include_router(user_crud_router, tags=["user"])
+app.include_router(company_crud_router, tags=["company"])
+
 
 
 if __name__ == "__main__":

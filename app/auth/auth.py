@@ -6,7 +6,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from config import global_settings
 from auth.schemas import TokenSchema
 from db.database import async_session
-from user.models import UserModel
+from user.models import User
 from utils.hashing import Hasher
 
 
@@ -29,7 +29,7 @@ class JWTBearer(HTTPBearer):
         else:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid authorization code.")
 
-    async def verify(self, token: str) -> UserModel or None:
+    async def verify(self, token: str) -> User or None:
         result_jwt = await self.verify_jwt(token)
 
         if result_jwt:
@@ -42,33 +42,33 @@ class JWTBearer(HTTPBearer):
 
         return None
 
-    async def verify_jwt(self, token: str) -> UserModel or None:
+    async def verify_jwt(self, token: str) -> User or None:
         payload = self.decode_jwt(token)
 
         if not payload:
             return None
 
         async with async_session() as db:
-            user = await UserModel.get_by_fields(db, email=payload['email'])
+            user = await User.get_by_fields(db, email=payload['email'])
 
         if not user:
             return None
 
         return user
 
-    async def verify_auth0(self, token: str) -> UserModel or None:
+    async def verify_auth0(self, token: str) -> User or None:
         payload = self.decode_auth0(token)
 
         if not payload:
             return None
 
         async with async_session() as db:
-            user = await UserModel.get_by_fields(db, email=payload['email'])
+            user = await User.get_by_fields(db, email=payload['email'])
 
             if user:
                 return user
 
-            new_user = UserModel(
+            new_user = User(
                 email=payload['email'],
                 username=payload['email'],
                 hashed_password=Hasher.get_password_hash(payload['email'])
@@ -119,10 +119,7 @@ class JWTBearer(HTTPBearer):
 
             return decoded_token if decoded_token["exp"] >= time.time() else None
 
-        except jwt.exceptions.DecodeError as err:
-            return None
-
-        except jwt.exceptions.InvalidAlgorithmError as err:
+        except:
             return None
 
 
