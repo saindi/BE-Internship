@@ -92,3 +92,18 @@ client = TestClient(app)
 async def ac() -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
+
+
+@pytest.fixture
+async def user_token(request, ac: AsyncClient) -> dict:
+    user_id = int(request.param) if hasattr(request, 'param') else 1
+
+    response_login = await ac.post("/auth/login/", json={
+        "email": f"test{user_id}@gmail.com",
+        "password": f"test{user_id}",
+    })
+
+    access_token = response_login.json()['access_token']
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    yield headers

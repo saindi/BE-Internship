@@ -1,19 +1,9 @@
 from httpx import AsyncClient
 
+import pytest
 from fastapi import status
+
 from utils.hashing import Hasher
-
-
-async def get_headers(ac: AsyncClient, user_id: int = 1) -> dict:
-    response_login = await ac.post("/auth/login/", json={
-        "email": f"test{user_id}@gmail.com",
-        "password": f"test{user_id}",
-    })
-
-    access_token = response_login.json()['access_token']
-    headers = {"Authorization": f"Bearer {access_token}"}
-
-    return headers
 
 
 async def test_create(ac: AsyncClient):
@@ -131,92 +121,82 @@ async def test_me_bad(ac: AsyncClient):
     assert response_me.json()["detail"] == "Invalid token or expired token."
 
 
-async def test_get(ac: AsyncClient):
-    headers = await get_headers(ac)
-
-    response = await ac.get("/user/3/", headers=headers)
-
-    assert response.status_code == 200
-    assert response.json()["email"] == "test3@gmail.com"
-
-
-async def test_get_bad_id(ac: AsyncClient):
-    headers = await get_headers(ac)
-
-    response = await ac.get("/user/100/", headers=headers)
-
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-
-async def test_get_all(ac: AsyncClient):
-    headers = await get_headers(ac)
-
-    response = await ac.get("/user/", headers=headers)
+async def test_get(ac: AsyncClient, user_token: dict):
+    response = await ac.get("/user/", headers=user_token)
 
     assert response.status_code == 200
     assert len(response.json()) == 5
 
 
-async def test_put(ac: AsyncClient):
-    headers = await get_headers(ac, 5)
+async def test_get_id(ac: AsyncClient, user_token: dict):
+    response = await ac.get("/user/3/", headers=user_token)
 
+    assert response.status_code == 200
+    assert response.json()["email"] == "test3@gmail.com"
+
+
+async def test_get_bad_id(ac: AsyncClient, user_token: dict):
+    response = await ac.get("/user/100/", headers=user_token)
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+async def test_get_all(ac: AsyncClient, user_token: dict):
+    response = await ac.get("/user/", headers=user_token)
+
+    assert response.status_code == 200
+    assert len(response.json()) == 5
+
+
+@pytest.mark.parametrize("user_token", ('5'), indirect=True)
+async def test_put(ac: AsyncClient, user_token: dict):
     response_put = await ac.put("/user/5/", json={
-        "username": "new@gmail.com",
-        "password": "new",
-        "password_confirm": "new",
-    }, headers=headers)
+        "username": "new",
+        "password": "test5",
+        "password_confirm": "test5",
+    }, headers=user_token)
 
-    response_get = await ac.get("/user/5/", headers=headers)
+    response_get = await ac.get("/user/5/", headers=user_token)
 
     assert response_put.status_code == status.HTTP_201_CREATED
-    assert Hasher.verify_password("new", response_get.json()['hashed_password']) == True
+    assert response_get.json()['username'] == 'new'
+    assert Hasher.verify_password("test5", response_get.json()['hashed_password']) == True
 
 
-async def test_put_bad_password(ac: AsyncClient):
-    headers = await get_headers(ac)
-
+async def test_put_bad_password(ac: AsyncClient, user_token: dict):
     response_put = await ac.put("/user/1/", json={
         "username": "username",
         "password": "12",
         "password_confirm": "qw",
-    }, headers=headers)
+    }, headers=user_token)
 
     assert response_put.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
     assert response_put.json()['detail'][0]['msg'] == "Value error, passwords do not match"
 
 
-async def test_put_bad_id(ac: AsyncClient):
-    headers = await get_headers(ac)
-
+@pytest.mark.parametrize("user_token", ('3'), indirect=True)
+async def test_put_bad_id(ac: AsyncClient, user_token: dict):
     response_put = await ac.put("/user/2/", json={
         "username": "username",
         "password": "qwer1234",
         "password_confirm": "qwer1234",
-    }, headers=headers)
+    }, headers=user_token)
 
     assert response_put.status_code == status.HTTP_400_BAD_REQUEST
     assert response_put.json()['detail'] == "This user cannot change the data"
 
 
-async def test_delete(ac: AsyncClient):
-    response_login = await ac.post("/auth/login/", json={
-        "email": f"test5@gmail.com",
-        "password": f"new",
-    })
+@pytest.mark.parametrize('user_token', ('5'), indirect=True)
+async def test_delete(ac: AsyncClient, user_token: dict):
 
-    access_token = response_login.json()['access_token']
-    headers = {"Authorization": f"Bearer {access_token}"}
-
-    response = await ac.delete("/user/5/", headers=headers)
+    response = await ac.delete("/user/5/", headers=user_token)
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["detail"] == "Success delete user"
 
 
-async def test_delete_bad_id(ac: AsyncClient):
-    headers = await get_headers(ac)
-
-    response = await ac.delete("/user/2/", headers=headers)
+async def test_delete_bad_id(ac: AsyncClient, user_token: dict):
+    response = await ac.delete("/user/4/", headers=user_token)
 
     assert response.status_code == 400
     assert response.json()["detail"] == "This user cannot delete"

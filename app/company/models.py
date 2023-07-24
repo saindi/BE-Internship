@@ -70,26 +70,14 @@ class Company(CompanyModel):
 
         return None
 
-    def get_owner(self) -> int or None:
+    def get_owner(self):
         id_owner = self.get_owner_id()
 
-        for user in self.users:
-            if user.id == id_owner:
-                return user
-
-        return None
+        return [user for user in self.users if user.id == id_owner][0]
 
     def get_admins(self) -> list:
-        id_admins = []
-        admins = []
-
-        for role in self.roles:
-            if role.role == RoleEnum.ADMIN:
-                id_admins.append(role.id_user)
-
-        for user in self.users:
-            if user.id in id_admins:
-                admins.append(user)
+        id_admins = [role.id_user for role in self.roles if role.role == RoleEnum.ADMIN]
+        admins = [user for user in self.users if user.id in id_admins]
 
         return admins
 
@@ -125,4 +113,3 @@ class RequestModel(BaseModel):
 
     id_company = Column(Integer, ForeignKey("company.id"), nullable=False)
     id_user = Column(Integer, ForeignKey("user.id"), nullable=False)
-
