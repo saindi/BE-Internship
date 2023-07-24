@@ -22,7 +22,7 @@ async def get_companies(skip: int = 0, limit: int = 100, db: AsyncSession = Depe
     return companies
 
 
-@router.get("/{company_id}", response_model=CompanySchema, dependencies=[Depends(jwt_bearer)])
+@router.get("/{company_id}/", response_model=CompanySchema, dependencies=[Depends(jwt_bearer)])
 async def get_company_by_id(company_id: int, db: AsyncSession = Depends(get_async_session)):
     company = await Company.get_by_id(db, company_id)
 
@@ -45,7 +45,7 @@ async def create_company(
     return new_company
 
 
-@router.put("/{company_id}", response_model=CompanySchema, status_code=status.HTTP_201_CREATED)
+@router.put("/{company_id}/", response_model=CompanySchema, status_code=status.HTTP_201_CREATED)
 async def update_company(
         company_id: int,
         data: CompanyUpdateRequest,
@@ -62,7 +62,7 @@ async def update_company(
     return company
 
 
-@router.delete("/{company_id}")
+@router.delete("/{company_id}/")
 async def delete_company(
         company_id: int,
         user: User = Depends(jwt_bearer),

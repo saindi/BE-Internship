@@ -20,7 +20,7 @@ async def get_users(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(
     return users
 
 
-@router.get("/{user_id}", response_model=UserSchema, dependencies=[Depends(jwt_bearer)])
+@router.get("/{user_id}/", response_model=UserSchema, dependencies=[Depends(jwt_bearer)])
 async def get_user_by_id(user_id: int, db: AsyncSession = Depends(get_async_session)):
     users = await User.get_by_id(db, user_id)
 
@@ -40,7 +40,7 @@ async def create_user(request: UserCreateRequest, db: AsyncSession = Depends(get
     return new_user
 
 
-@router.put("/{user_id}", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
+@router.put("/{user_id}/", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
 async def update_user(
         user_id: int,
         data: UserUpdateRequest,
@@ -57,7 +57,7 @@ async def update_user(
     return user
 
 
-@router.delete("/{user_id}")
+@router.delete("/{user_id}/")
 async def delete_user(
         user_id: int,
         user: User = Depends(jwt_bearer),

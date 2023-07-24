@@ -45,14 +45,13 @@ async def health_check():
     }
 
 
-app.include_router(auth_router, tags=["auth"])
+app.include_router(auth_router, tags=["Auth"])
 
-app.include_router(user_actions_router, tags=["user_actions"])
-app.include_router(company_actions_router, tags=["company_actions"])
+app.include_router(user_actions_router, tags=["User actions"])
+app.include_router(user_crud_router, tags=["User"])
 
-app.include_router(user_crud_router, tags=["user"])
-app.include_router(company_crud_router, tags=["company"])
-
+app.include_router(company_crud_router, tags=["Company"])
+app.include_router(company_actions_router, tags=["Company actions"])
 
 
 if __name__ == "__main__":

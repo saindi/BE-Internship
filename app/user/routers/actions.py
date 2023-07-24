@@ -17,7 +17,7 @@ async def get_requests(skip: int = 0, limit: int = 100, user: User = Depends(jwt
     return user.companies[skip:limit]
 
 
-@router.get("/company/{company_id}/exit", response_model=List[CompanySchema])
+@router.get("/company/{company_id}/exit/", response_model=List[CompanySchema])
 async def exit_from_company(
         company_id: int,
         user: User = Depends(jwt_bearer),
@@ -35,12 +35,12 @@ async def exit_from_company(
     return await role.delete(db)
 
 
-@router.get("/requests", response_model=List[RequestSchema])
+@router.get("/requests/", response_model=List[RequestSchema])
 async def get_requests(user: User = Depends(jwt_bearer)):
     return user.requests
 
 
-@router.post("/request", response_model=RequestSchema)
+@router.post("/request/", response_model=RequestSchema)
 async def create_request(
         company_id: int,
         user: User = Depends(jwt_bearer),
@@ -53,7 +53,7 @@ async def create_request(
     return request
 
 
-@router.delete("/request/{request_id}")
+@router.delete("/request/{request_id}/")
 async def delete_invitation(
         request_id: int,
         user: User = Depends(jwt_bearer),
@@ -67,12 +67,12 @@ async def delete_invitation(
     return await request.delete(db)
 
 
-@router.get("/invitations", response_model=List[InvitationSchema])
+@router.get("/invitations/", response_model=List[InvitationSchema])
 async def get_invitation(user: User = Depends(jwt_bearer)):
     return user.invitations
 
 
-@router.get("/invitation/{invite_id}/accept", response_model=RoleSchema)
+@router.get("/invitation/{invite_id}/accept/", response_model=RoleSchema)
 async def accept_invitation(
         invite_id: int,
         user: User = Depends(jwt_bearer),
@@ -90,13 +90,13 @@ async def accept_invitation(
     return role
 
 
-@router.get("/invitation/{invite_id}/reject")
+@router.get("/invitation/{invite_id}/reject/")
 async def reject_invitation(
         invite_id: int,
         user: User = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
-    invite = await InvitationModel.get_by_fields(db, id_user=user.id, id_invite=invite_id)
+    invite = await InvitationModel.get_by_fields(db, id_user=user.id, id=invite_id)
 
     if not invite:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invite not found")

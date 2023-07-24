@@ -70,6 +70,31 @@ class Company(CompanyModel):
 
         return None
 
+    def get_owner(self) -> int or None:
+        id_owner = self.get_owner_id()
+
+        for user in self.users:
+            if user.id == id_owner:
+                return user
+
+        return None
+
+    def get_admins(self) -> list:
+        id_admins = []
+        admins = []
+
+        for role in self.roles:
+            if role.role == RoleEnum.ADMIN:
+                id_admins.append(role.id_user)
+
+        for user in self.users:
+            if user.id in id_admins:
+                admins.append(user)
+
+        return admins
+
+
+
     async def add_invite_to_company(self, db, target_user):
         for user_company in self.users:
             if user_company.id == target_user.id:
