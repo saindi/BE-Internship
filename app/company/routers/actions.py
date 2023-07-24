@@ -14,21 +14,21 @@ router = APIRouter(prefix='/company')
 
 
 @router.get("/{company_id}/owner/", response_model=UserSchema, dependencies=[Depends(jwt_bearer)])
-async def get_requests(company_id: int, db: AsyncSession = Depends(get_async_session)):
+async def get_owner_user(company_id: int, db: AsyncSession = Depends(get_async_session)):
     company = await Company.get_by_id(db, company_id)
 
     return company.get_owner()
 
 
 @router.get("/{company_id}/admins/", response_model=List[UserSchema], dependencies=[Depends(jwt_bearer)])
-async def get_requests(company_id: int, db: AsyncSession = Depends(get_async_session)):
+async def get_admins(company_id: int, db: AsyncSession = Depends(get_async_session)):
     company = await Company.get_by_id(db, company_id)
 
     return company.get_admins()
 
 
 @router.get("/{company_id}/admin/{user_id}/set/", response_model=RoleSchema)
-async def get_requests(
+async def set_admin(
         company_id: int,
         user_id: int,
         user: User = Depends(jwt_bearer),
@@ -50,7 +50,7 @@ async def get_requests(
 
 
 @router.get("/{company_id}/admin/{user_id}/remove/", response_model=RoleSchema)
-async def get_requests(
+async def remove_admin(
         company_id: int,
         user_id: int,
         user: User = Depends(jwt_bearer),
@@ -72,7 +72,7 @@ async def get_requests(
 
 
 @router.get("/{company_id}/users/", response_model=List[UserSchema])
-async def get_requests(
+async def get_users(
         company_id: int,
         skip: int = 0,
         limit: int = 100,
@@ -176,7 +176,7 @@ async def get_requests(
 
 
 @router.get("/{company_id}/request/{request_id}/accept/", response_model=RoleSchema)
-async def get_requests(
+async def accept_request(
         company_id: int,
         request_id: int,
         user: User = Depends(jwt_bearer),
@@ -197,7 +197,7 @@ async def get_requests(
 
 
 @router.get("/{company_id}/request/{request_id}/reject/")
-async def get_requests(
+async def reject_request(
         company_id: int,
         request_id: int,
         user: User = Depends(jwt_bearer),
