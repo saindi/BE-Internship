@@ -70,6 +70,17 @@ class Company(CompanyModel):
 
         return None
 
+    def get_owner(self):
+        id_owner = self.get_owner_id()
+
+        return [user for user in self.users if user.id == id_owner][0]
+
+    def get_admins(self) -> list:
+        id_admins = [role.id_user for role in self.roles if role.role == RoleEnum.ADMIN]
+        admins = [user for user in self.users if user.id in id_admins]
+
+        return admins
+
     async def add_invite_to_company(self, db, target_user):
         for user_company in self.users:
             if user_company.id == target_user.id:
@@ -102,4 +113,3 @@ class RequestModel(BaseModel):
 
     id_company = Column(Integer, ForeignKey("company.id"), nullable=False)
     id_user = Column(Integer, ForeignKey("user.id"), nullable=False)
-

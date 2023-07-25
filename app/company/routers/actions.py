@@ -13,8 +13,66 @@ from user.schemas import UserSchema
 router = APIRouter(prefix='/company')
 
 
+@router.get("/{company_id}/owner/", response_model=UserSchema, dependencies=[Depends(jwt_bearer)])
+async def get_owner_user(company_id: int, db: AsyncSession = Depends(get_async_session)):
+    company = await Company.get_by_id(db, company_id)
+
+    return company.get_owner()
+
+
+@router.get("/{company_id}/admins/", response_model=List[UserSchema], dependencies=[Depends(jwt_bearer)])
+async def get_admins(company_id: int, db: AsyncSession = Depends(get_async_session)):
+    company = await Company.get_by_id(db, company_id)
+
+    return company.get_admins()
+
+
+@router.get("/{company_id}/admin/{user_id}/set/", response_model=RoleSchema)
+async def set_admin(
+        company_id: int,
+        user_id: int,
+        user: User = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    company = await Company.get_by_id(db, company_id)
+
+    if not company.is_owner(user.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No permission')
+
+    role = await RoleModel.get_by_fields(db, id_company=company_id, id_user=user_id)
+
+    if not role:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='User not found in the company')
+
+    await role.update(db, {'role': RoleEnum.ADMIN})
+
+    return role
+
+
+@router.get("/{company_id}/admin/{user_id}/remove/", response_model=RoleSchema)
+async def remove_admin(
+        company_id: int,
+        user_id: int,
+        user: User = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    company = await Company.get_by_id(db, company_id)
+
+    if not company.is_owner(user.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No permission')
+
+    role = await RoleModel.get_by_fields(db, id_company=company_id, id_user=user_id)
+
+    if not role:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='User not found in the company')
+
+    await role.update(db, {'role': RoleEnum.MEMBER})
+
+    return role
+
+
 @router.get("/{company_id}/users/", response_model=List[UserSchema])
-async def get_requests(
+async def get_users(
         company_id: int,
         skip: int = 0,
         limit: int = 100,
@@ -29,7 +87,7 @@ async def get_requests(
     return company.users
 
 
-@router.get("/{company_id}/kick/{user_id}")
+@router.get("/{company_id}/kick/{user_id}/")
 async def kick_user(
         company_id: int,
         user_id: int,
@@ -52,7 +110,7 @@ async def kick_user(
     return await kick_role.delete(db)
 
 
-@router.get("/{company_id}/invitations", response_model=List[InvitationSchema])
+@router.get("/{company_id}/invitations/", response_model=List[InvitationSchema])
 async def get_invitations(
         company_id: int,
         user: User = Depends(jwt_bearer),
@@ -66,7 +124,7 @@ async def get_invitations(
     return company.invitations
 
 
-@router.post("/{company_id}/invitation", response_model=InvitationSchema)
+@router.post("/{company_id}/invitation/", response_model=InvitationSchema)
 async def create_invitation(
         company_id: int,
         user_id: int,
@@ -86,7 +144,7 @@ async def create_invitation(
     return invate
 
 
-@router.delete("/{company_id}/invitation/{invite_id}")
+@router.delete("/{company_id}/invitation/{invite_id}/")
 async def delete_invitation(
         company_id: int,
         invite_id: int,
@@ -103,7 +161,7 @@ async def delete_invitation(
     return await invitation.delete(db)
 
 
-@router.get("/{company_id}/requests", response_model=List[RequestSchema])
+@router.get("/{company_id}/requests/", response_model=List[RequestSchema])
 async def get_requests(
         company_id: int,
         user: User = Depends(jwt_bearer),
@@ -117,8 +175,8 @@ async def get_requests(
     return company.requests
 
 
-@router.get("/{company_id}/request/{request_id}/accept", response_model=RoleSchema)
-async def get_requests(
+@router.get("/{company_id}/request/{request_id}/accept/", response_model=RoleSchema)
+async def accept_request(
         company_id: int,
         request_id: int,
         user: User = Depends(jwt_bearer),
@@ -138,8 +196,8 @@ async def get_requests(
     return new_role
 
 
-@router.get("/{company_id}/request/{request_id}/reject")
-async def get_requests(
+@router.get("/{company_id}/request/{request_id}/reject/")
+async def reject_request(
         company_id: int,
         request_id: int,
         user: User = Depends(jwt_bearer),

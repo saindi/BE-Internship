@@ -10,7 +10,7 @@ from user.schemas import UserSchema
 router = APIRouter(prefix='/auth')
 
 
-@router.post("/login", response_model=TokenSchema)
+@router.post("/login/", response_model=TokenSchema)
 async def login(request: LoginSchema, db: AsyncSession = Depends(get_async_session)):
     user = await User.get_by_fields(db, email=request.email)
 
@@ -20,6 +20,6 @@ async def login(request: LoginSchema, db: AsyncSession = Depends(get_async_sessi
     return jwt_bearer.sign_jwt(user.email)
 
 
-@router.get("/me", response_model=UserSchema)
+@router.get("/me/", response_model=UserSchema)
 async def me(user: User = Depends(jwt_bearer)):
     return user
