@@ -15,9 +15,9 @@ async def test_request(ac: AsyncClient, user_token: dict):
     }, headers=user_token)
 
     assert response_1.json()['id_company'] == 1
-    assert response_1.status_code == status.HTTP_200_OK
+    assert response_1.status_code == status.HTTP_201_CREATED
     assert response_2.json()['id_company'] == 3
-    assert response_2.status_code == status.HTTP_200_OK
+    assert response_2.status_code == status.HTTP_201_CREATED
 
 
 @pytest.mark.parametrize('user_token', ('3'), indirect=True)
@@ -71,8 +71,8 @@ async def test_invite(ac: AsyncClient, user_token: dict):
     response_1 = await ac.post("/company/1/invitation/", params={'user_id': 2}, headers=user_token)
     response_2 = await ac.post("/company/1/invitation/", params={'user_id': 4}, headers=user_token)
 
-    assert response_1.status_code == status.HTTP_200_OK
-    assert response_2.status_code == status.HTTP_200_OK
+    assert response_1.status_code == status.HTTP_201_CREATED
+    assert response_2.status_code == status.HTTP_201_CREATED
 
 
 @pytest.mark.parametrize('user_token', ('2'), indirect=True)

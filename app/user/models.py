@@ -22,8 +22,6 @@ class UserModel(BaseModel):
     invitations = relationship("InvitationModel", lazy="subquery", cascade="all, delete-orphan")
     requests = relationship("RequestModel", lazy="subquery", cascade="all, delete-orphan")
 
-
-class User(UserModel):
     def user_verification(self, hashed_password):
         return Hasher.verify_password(hashed_password, self.hashed_password)
 

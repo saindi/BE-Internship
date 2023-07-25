@@ -33,9 +33,8 @@ class CompanyModel(BaseModel):
     roles = relationship("RoleModel", lazy="subquery", cascade="all, delete-orphan")
     invitations = relationship("InvitationModel", lazy="subquery", cascade="all, delete-orphan")
     requests = relationship("RequestModel", lazy="subquery", cascade="all, delete-orphan")
+    quizzes = relationship("QuizModel", cascade="all, delete-orphan", back_populates="company", lazy="subquery")
 
-
-class Company(CompanyModel):
     async def create(self, db: AsyncSession, owner_id: int):
         await super().create(db)
 
@@ -52,6 +51,16 @@ class Company(CompanyModel):
 
     def user_can_delete(self, current_user_id: int) -> bool:
         return self.get_owner_id() == current_user_id
+
+    def user_entitled_quiz(self, current_user_id: int) -> bool:
+        print('\n')
+        print(self.get_id_admins())
+        print('\n')
+
+        if self.is_owner(current_user_id) or current_user_id in self.get_id_admins():
+            return True
+
+        return False
 
     def is_owner(self, current_user_id: int) -> bool:
         return self.get_owner_id() == current_user_id
@@ -75,9 +84,13 @@ class Company(CompanyModel):
 
         return [user for user in self.users if user.id == id_owner][0]
 
-    def get_admins(self) -> list:
+    def get_id_admins(self) -> list:
         id_admins = [role.id_user for role in self.roles if role.role == RoleEnum.ADMIN]
-        admins = [user for user in self.users if user.id in id_admins]
+
+        return id_admins
+
+    def get_admins(self) -> list:
+        admins = [user for user in self.users if user.id in self.get_id_admins()]
 
         return admins
 
