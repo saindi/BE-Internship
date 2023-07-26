@@ -4,26 +4,26 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.auth import jwt_bearer
-from company.models import Company, RequestModel, RoleModel, InvitationModel, RoleEnum
+from company.models import CompanyModel, RequestModel, RoleModel, InvitationModel, RoleEnum
 from company.schemas import RequestSchema, InvitationSchema, RoleSchema, CompanySchema
 from db.database import get_async_session
-from user.models import User
+from user.models import UserModel
 
 router = APIRouter(prefix='/user')
 
 
 @router.get("/companies/", response_model=List[CompanySchema])
-async def get_requests(skip: int = 0, limit: int = 100, user: User = Depends(jwt_bearer)):
+async def get_requests(skip: int = 0, limit: int = 100, user: UserModel = Depends(jwt_bearer)):
     return user.companies[skip:limit]
 
 
 @router.get("/company/{company_id}/exit/", response_model=List[CompanySchema])
 async def exit_from_company(
         company_id: int,
-        user: User = Depends(jwt_bearer),
+        user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
-    company = await Company.get_by_id(db, company_id)
+    company = await CompanyModel.get_by_id(db, company_id)
     role = await RoleModel.get_by_fields(db, id_company=company.id, id_user=user.id)
 
     if not role:
@@ -36,17 +36,17 @@ async def exit_from_company(
 
 
 @router.get("/requests/", response_model=List[RequestSchema])
-async def get_requests(user: User = Depends(jwt_bearer)):
+async def get_requests(user: UserModel = Depends(jwt_bearer)):
     return user.requests
 
 
-@router.post("/request/", response_model=RequestSchema)
+@router.post("/request/", response_model=RequestSchema, status_code=status.HTTP_201_CREATED)
 async def create_request(
         company_id: int,
-        user: User = Depends(jwt_bearer),
+        user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
-    company = await Company.get_by_id(db, company_id)
+    company = await CompanyModel.get_by_id(db, company_id)
 
     request = await user.add_request_to_company(db, company)
 
@@ -56,7 +56,7 @@ async def create_request(
 @router.delete("/request/{request_id}/")
 async def delete_invitation(
         request_id: int,
-        user: User = Depends(jwt_bearer),
+        user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
     request = await RequestModel.get_by_id(db, request_id)
@@ -68,14 +68,14 @@ async def delete_invitation(
 
 
 @router.get("/invitations/", response_model=List[InvitationSchema])
-async def get_invitations(user: User = Depends(jwt_bearer)):
+async def get_invitations(user: UserModel = Depends(jwt_bearer)):
     return user.invitations
 
 
 @router.get("/invitation/{invite_id}/accept/", response_model=RoleSchema)
 async def accept_invitation(
         invite_id: int,
-        user: User = Depends(jwt_bearer),
+        user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
     invite = await InvitationModel.get_by_fields(db, id_user=user.id, id=invite_id)
@@ -93,7 +93,7 @@ async def accept_invitation(
 @router.get("/invitation/{invite_id}/reject/")
 async def reject_invitation(
         invite_id: int,
-        user: User = Depends(jwt_bearer),
+        user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
     invite = await InvitationModel.get_by_fields(db, id_user=user.id, id=invite_id)

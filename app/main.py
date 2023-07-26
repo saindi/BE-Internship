@@ -9,6 +9,8 @@ from user.routers.actions import router as user_actions_router
 from auth.router import router as auth_router
 from company.routers.crud import router as company_crud_router
 from company.routers.actions import router as company_actions_router
+from quiz.routers.quiz import router as quiz_crud_router
+from quiz.routers.question import router as question_crud_router
 
 
 app = FastAPI()
@@ -52,6 +54,10 @@ app.include_router(user_crud_router, tags=["User"])
 
 app.include_router(company_crud_router, tags=["Company"])
 app.include_router(company_actions_router, tags=["Company actions"])
+
+app.include_router(quiz_crud_router, tags=["Quiz"])
+
+app.include_router(question_crud_router, tags=["Question"])
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ from auth.auth import JWTBearer, jwt_bearer
 from db.database import get_async_session, metadata
 from config import global_settings
 from main import app
-from user.models import User
+from user.models import UserModel
 from utils.hashing import Hasher
 
 engine_test = create_async_engine(global_settings.postgresql_test_url, poolclass=NullPool)
@@ -28,7 +28,7 @@ class OverrideJWTBearer(JWTBearer):
             return None
 
         async with async_session_maker() as db:
-            user = await User.get_by_fields(db, email=payload['email'])
+            user = await UserModel.get_by_fields(db, email=payload['email'])
 
         if not user:
             return None
@@ -42,12 +42,12 @@ class OverrideJWTBearer(JWTBearer):
             return None
 
         async with async_session_maker() as db:
-            user = await User.get_by_fields(db, email=payload['email'])
+            user = await UserModel.get_by_fields(db, email=payload['email'])
 
             if user:
                 return user
 
-            new_user = User(
+            new_user = UserModel(
                 email=payload['email'],
                 username=payload['email'],
                 hashed_password=Hasher.get_password_hash(payload['email'])

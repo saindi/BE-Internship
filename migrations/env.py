@@ -9,6 +9,7 @@ from alembic import context
 
 from user import models
 from company import models
+from quiz import models
 from db.database import metadata
 from config import global_settings
 
