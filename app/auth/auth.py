@@ -1,4 +1,6 @@
 import time
+from typing import Optional
+
 import jwt
 
 from fastapi import Request, HTTPException, status
@@ -29,7 +31,7 @@ class JWTBearer(HTTPBearer):
         else:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid authorization code.")
 
-    async def verify(self, token: str) -> UserModel or None:
+    async def verify(self, token: str) -> Optional[UserModel]:
         result_jwt = await self.verify_jwt(token)
 
         if result_jwt:
@@ -42,7 +44,7 @@ class JWTBearer(HTTPBearer):
 
         return None
 
-    async def verify_jwt(self, token: str) -> UserModel or None:
+    async def verify_jwt(self, token: str) -> Optional[UserModel]:
         payload = self.decode_jwt(token)
 
         if not payload:
@@ -56,7 +58,7 @@ class JWTBearer(HTTPBearer):
 
         return user
 
-    async def verify_auth0(self, token: str) -> UserModel or None:
+    async def verify_auth0(self, token: str) -> Optional[UserModel]:
         payload = self.decode_auth0(token)
 
         if not payload:
@@ -90,7 +92,7 @@ class JWTBearer(HTTPBearer):
         return TokenSchema(access_token=token)
 
     @staticmethod
-    def decode_jwt(token: str) -> dict or None:
+    def decode_jwt(token: str) -> Optional[dict]:
         try:
             decoded_token = jwt.decode(token, global_settings.jwt_secret, algorithms=global_settings.jwt_algorithm)
             return decoded_token if decoded_token["expires"] >= time.time() else None
@@ -102,7 +104,7 @@ class JWTBearer(HTTPBearer):
             return None
 
     @staticmethod
-    def decode_auth0(token: str) -> dict or None:
+    def decode_auth0(token: str) -> Optional[dict]:
         try:
             jwks_url = f'https://{global_settings.auth0_domain}/.well-known/jwks.json'
             jwks_client = jwt.PyJWKClient(jwks_url)

@@ -29,9 +29,7 @@ async def get_all_quizzes(
 
 @router.get("/{quiz_id}/", response_model=QuizWithQuestion, dependencies=[Depends(jwt_bearer)])
 async def get_quiz(quiz_id: int, db: AsyncSession = Depends(get_async_session)):
-    quiz = await QuizModel.get_by_id(db, quiz_id)
-
-    return quiz
+    return await QuizModel.get_by_id(db, quiz_id)
 
 
 @router.post("/{company_id}/", response_model=QuizSchema, status_code=status.HTTP_201_CREATED)

@@ -22,7 +22,7 @@ class UserModel(BaseModel):
     invitations = relationship("InvitationModel", lazy="subquery", cascade="all, delete-orphan")
     requests = relationship("RequestModel", lazy="subquery", cascade="all, delete-orphan")
 
-    def user_verification(self, hashed_password):
+    def user_verification(self, hashed_password) -> bool:
         return Hasher.verify_password(hashed_password, self.hashed_password)
 
     def can_edit(self, user_id: int) -> bool:

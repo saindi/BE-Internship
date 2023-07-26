@@ -1,4 +1,5 @@
 import enum
+from typing import Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy import Column, String, Integer, ForeignKey, Boolean, Enum
@@ -53,10 +54,6 @@ class CompanyModel(BaseModel):
         return self.get_owner_id() == current_user_id
 
     def user_entitled_quiz(self, current_user_id: int) -> bool:
-        print('\n')
-        print(self.get_id_admins())
-        print('\n')
-
         if self.is_owner(current_user_id) or current_user_id in self.get_id_admins():
             return True
 
@@ -72,7 +69,7 @@ class CompanyModel(BaseModel):
 
         return False
 
-    def get_owner_id(self) -> int or None:
+    def get_owner_id(self) -> Optional[int]:
         for role in self.roles:
             if role.role == RoleEnum.OWNER:
                 return role.id_user
