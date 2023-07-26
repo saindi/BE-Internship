@@ -40,7 +40,7 @@ async def create_company(
 ):
     new_company = CompanyModel(**dict(request))
 
-    await new_company.create(db, user.id)
+    await new_company.create_with_owner(db, user.id)
 
     return new_company
 

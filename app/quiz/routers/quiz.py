@@ -46,7 +46,7 @@ async def create_quiz(
 
     quiz = QuizModel(name=data.name, description=data.description, count_day=data.count_day, id_company=company.id)
 
-    await quiz.create(db, data)
+    await quiz.create_with_questions(db, data)
 
     return quiz
 
