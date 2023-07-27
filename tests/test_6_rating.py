@@ -10,7 +10,6 @@ answers = {
 }
 
 
-@pytest.mark.parametrize('user_token', ('2'), indirect=True)
 async def test_pass_qiuz(ac: AsyncClient, user_token: dict):
     response_1 = await ac.post("/quiz/2/pass_test/", json={
         "answers": [
@@ -40,7 +39,6 @@ async def test_pass_qiuz(ac: AsyncClient, user_token: dict):
     assert response_3.json()["count_correct_answers"] == 1
 
 
-@pytest.mark.parametrize('user_token', ('2'), indirect=True)
 async def test_company_rating(ac: AsyncClient, user_token: dict):
     response = await ac.get("/user/company_rating/", headers=user_token)
 
@@ -50,7 +48,6 @@ async def test_company_rating(ac: AsyncClient, user_token: dict):
     assert response.json()[1]['rating'] == 0.5
 
 
-@pytest.mark.parametrize('user_token', ('2'), indirect=True)
 async def test_global_rating(ac: AsyncClient, user_token: dict):
     response = await ac.get("/user/global_rating/", headers=user_token)
 

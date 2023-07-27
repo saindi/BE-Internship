@@ -45,7 +45,7 @@ async def test_create(ac: AsyncClient, user_token: dict):
 
 
 async def test_get_all(ac: AsyncClient, user_token: dict):
-    response = await ac.get("/quiz/", headers=user_token)
+    response = await ac.get("/company/1/quizzes/", headers=user_token)
 
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 1
@@ -127,11 +127,11 @@ async def test_delete_question(ac: AsyncClient, user_token: dict):
 async def test_delete_quiz(ac: AsyncClient, user_token: dict):
     response = await ac.delete("/quiz/1/", params={'quiz_id': 1}, headers=user_token)
 
-    response_all = await ac.get("/quiz/", headers=user_token)
+    response_all = await ac.get("/company/1/quizzes/", headers=user_token)
 
     assert response.status_code == status.HTTP_200_OK
-    assert response_all.status_code == status.HTTP_400_BAD_REQUEST
-    assert response_all.json()['detail'] == "No such quizzes"
+    assert response_all.status_code == status.HTTP_200_OK
+    assert len(response_all.json()) == 0
 
 
 async def test_create_2(ac: AsyncClient, user_token: dict):

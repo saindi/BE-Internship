@@ -87,25 +87,24 @@ class PassTestRequest(BaseModel):
     answers: List[List[int]]
 
 
-class ResultTestSchema(BaseModel):
+class IdWithUser(BaseModel):
     id: int
-    count_correct_answers: int
-    count_questions: int
     id_user: int
-    id_company: int
-    id_quiz: int
     created_at: datetime
     updated_at: datetime
+
+
+class ResultTestSchema(IdWithUser):
+    count_correct_answers: int
+    count_questions: int
+    id_company: int
+    id_quiz: int
 
     model_config = SettingsConfigDict(from_attributes=True)
 
 
-class GlobalRatingSchema(BaseModel):
-    id: int
-    id_user: int
+class GlobalRatingSchema(IdWithUser):
     rating: float
-    created_at: datetime
-    updated_at: datetime
 
 
 class CompanyRatingSchema(GlobalRatingSchema):

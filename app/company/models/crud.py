@@ -66,7 +66,7 @@ class CompanyCrud:
 
         return admins
 
-    async def add_invite_to_company(self, db, target_user):
+    async def add_invite_to_company(self, db: AsyncSession, target_user):
         from company.models.models import InvitationModel
 
         for user_company in self.users:

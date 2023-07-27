@@ -1,4 +1,5 @@
 from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from company.models.models import RequestModel
@@ -6,7 +7,7 @@ from utils.hashing import Hasher
 
 
 class UserCrud:
-    def user_verification(self, hashed_password) -> bool:
+    def user_verification(self, hashed_password: str) -> bool:
         return Hasher.verify_password(hashed_password, self.hashed_password)
 
     def can_edit(self, user_id: int) -> bool:
@@ -15,7 +16,7 @@ class UserCrud:
     def can_delete(self, user_id: int) -> bool:
         return self.id == user_id or self.is_superuser
 
-    async def add_request_to_company(self, db, company):
+    async def add_request_to_company(self, db: AsyncSession, company):
         for user_company in self.companies:
             if user_company.id == company.id:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,

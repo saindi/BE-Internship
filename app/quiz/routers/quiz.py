@@ -21,22 +21,6 @@ from user.models.models import UserModel
 router = APIRouter(prefix='/quiz')
 
 
-@router.get("/{company_id}", response_model=List[QuizSchema])
-async def get_all_quizzes(
-        company_id: int,
-        skip: int = 0,
-        limit: int = 100,
-        user: UserModel = Depends(jwt_bearer),
-        db: AsyncSession = Depends(get_async_session)
-):
-    company = await CompanyModel.get_by_id(db, company_id)
-
-    if not company.is_user_in_company(user.id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='You are not a member of this company')
-
-    return company.quizzes[skip:limit]
-
-
 @router.get("/{quiz_id}/", response_model=QuizWithQuestion)
 async def get_quiz(quiz_id: int, user: UserModel = Depends(jwt_bearer), db: AsyncSession = Depends(get_async_session)):
     quiz = await QuizModel.get_by_id(db, quiz_id)
