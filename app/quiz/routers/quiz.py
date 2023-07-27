@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.auth import jwt_bearer
 from db.database import get_async_session
-from company.models import CompanyModel
+from company.models.models import CompanyModel
 from quiz.schemas import (
     QuizSchema,
     QuizData,
@@ -15,8 +15,8 @@ from quiz.schemas import (
     PassTestRequest,
     ResultTestSchema
 )
-from quiz.models import QuizModel
-from user.models import UserModel
+from quiz.models.models import QuizModel
+from user.models.models import UserModel
 
 router = APIRouter(prefix='/quiz')
 

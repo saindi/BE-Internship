@@ -4,12 +4,12 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.auth import jwt_bearer
-from company.models import CompanyModel, RequestModel, RoleModel, InvitationModel, RoleEnum
+from company.models.models import CompanyModel, RequestModel, RoleModel, InvitationModel, RoleEnum
 from company.schemas import RequestSchema, InvitationSchema, RoleSchema, CompanySchema
 from db.database import get_async_session
-from quiz.models import AverageScoreGlobalModel, AverageScoreCompanyModel
+from quiz.models.models import AverageScoreGlobalModel, AverageScoreCompanyModel
 from quiz.schemas import CompanyRatingSchema, GlobalRatingSchema
-from user.models import UserModel
+from user.models.models import UserModel
 
 router = APIRouter(prefix='/user')
 

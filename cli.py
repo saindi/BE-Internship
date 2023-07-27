@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath(SOURCE_DIR))
 @click.option("--password", prompt="Password", hide_input=True, confirmation_prompt=True, help="Password of the superuser")
 async def create_superuser(email, username, password):
     from db.database import async_session
-    from user.models import UserModel
+    from user.models.models import UserModel
     from utils.hashing import Hasher
 
     async with async_session() as session:

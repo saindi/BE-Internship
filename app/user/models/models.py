@@ -2,7 +2,7 @@ from sqlalchemy import Boolean, Column, String
 from sqlalchemy.orm import relationship
 
 from db.models import BaseModel
-from user.crud import UserCrud
+from user.models.crud import UserCrud
 
 
 class UserModel(BaseModel, UserCrud):

@@ -5,7 +5,7 @@ from quiz.schemas import ResultTestSchema
 
 class QuestionCrud:
     async def create_with_answer(self, db, data):
-        from quiz.models import AnswerModel
+        from quiz.models.models import AnswerModel
 
         await self.create(db)
 
@@ -17,7 +17,7 @@ class QuestionCrud:
         await db.refresh(self)
 
     async def update_with_answers(self, db, data):
-        from quiz.models import AnswerModel
+        from quiz.models.models import AnswerModel
 
         await self.update(db, {'question': data.question})
 
@@ -34,7 +34,7 @@ class QuestionCrud:
 
 class QuizCrud:
     async def create_with_questions(self, db, data):
-        from quiz.models import QuestionModel
+        from quiz.models.models import QuestionModel
 
         await self.create(db)
 
@@ -44,7 +44,7 @@ class QuizCrud:
             await new_question.create_with_answer(db, question.answers)
 
     async def add_question(self, db, data):
-        from quiz.models import QuestionModel
+        from quiz.models.models import QuestionModel
 
         new_question = QuestionModel(question=data.question, id_quiz=self.id)
 
@@ -90,7 +90,7 @@ class QuizCrud:
         return answers
 
     async def pass_test(self, db, test_user, answers) -> ResultTestSchema:
-        from quiz.models import ResultTestModel
+        from quiz.models.models import ResultTestModel
 
         self.validate_answers(answers)
 
@@ -117,7 +117,7 @@ class QuizCrud:
 
     @staticmethod
     async def set_company_rating(db, user, company_id):
-        from quiz.models import AverageScoreCompanyModel, ResultTestModel
+        from quiz.models.models import AverageScoreCompanyModel, ResultTestModel
 
         results = await ResultTestModel.get_by_fields(db, return_single=False, id_user=user.id, id_company=company_id)
 
@@ -138,7 +138,7 @@ class QuizCrud:
 
     @staticmethod
     async def set_global_rating(db, user):
-        from quiz.models import AverageScoreGlobalModel, ResultTestModel
+        from quiz.models.models import AverageScoreGlobalModel, ResultTestModel
 
         results = await ResultTestModel.get_by_fields(db, return_single=False, id_user=user.id)
 

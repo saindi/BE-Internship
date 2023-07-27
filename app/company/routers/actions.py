@@ -6,9 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from auth.auth import jwt_bearer
 from company.schemas import InvitationSchema, RequestSchema, RoleSchema
 from db.database import get_async_session
-from company.models import CompanyModel, InvitationModel, RequestModel, RoleModel, RoleEnum
+from company.models.models import CompanyModel, InvitationModel, RequestModel, RoleModel, RoleEnum
 from quiz.schemas import QuizSchema
-from user.models import UserModel
+from user.models.models import UserModel
 from user.schemas import UserSchema
 
 router = APIRouter(prefix='/company')

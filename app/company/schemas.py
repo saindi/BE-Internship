@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 from pydantic_settings import SettingsConfigDict
 
-from company.models import RoleEnum
+from company.models.models import RoleEnum
 
 
 class CompanySchema(BaseModel):

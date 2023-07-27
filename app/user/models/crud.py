@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from starlette import status
 
-from company.models import RequestModel
+from company.models.models import RequestModel
 from utils.hashing import Hasher
 
 

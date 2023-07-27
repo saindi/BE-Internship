@@ -4,10 +4,10 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.auth import jwt_bearer
-from company.models import RoleModel, RoleEnum
+from company.models.models import RoleModel, RoleEnum
 from db.database import get_async_session
 from user.schemas import UserSchema, UserCreateRequest, UserUpdateRequest, UserNewData
-from user.models import UserModel
+from user.models.models import UserModel
 from utils.hashing import Hasher
 
 router = APIRouter(prefix='/user')

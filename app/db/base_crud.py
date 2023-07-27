@@ -16,7 +16,7 @@ class BaseCRUD(Base):
 
     @classmethod
     async def get_all(cls: Type[TBase], db: AsyncSession, skip: int = 0, limit: int = 100) -> List[TBase]:
-        query = select(cls).offset(skip).limit(limit)
+        query = select(cls).offset(skip).limit(limit).order_by(cls.id)
         result = await db.execute(query)
         instances = result.scalars().all()
 
@@ -44,7 +44,7 @@ class BaseCRUD(Base):
             **kwargs
     ) -> List[TBase]:
         filters = [getattr(cls, field) == value for field, value in kwargs.items()]
-        query = select(cls).where(and_(*filters)).offset(skip).limit(limit)
+        query = select(cls).where(and_(*filters)).offset(skip).limit(limit).order_by(cls.id)
         result = await db.execute(query)
         instances = result.scalars().all()
 

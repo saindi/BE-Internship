@@ -2,7 +2,7 @@ from sqlalchemy import Column, String, Integer, ForeignKey, Boolean, Float
 from sqlalchemy.orm import relationship
 
 from db.models import BaseModel
-from quiz.crud import QuestionCrud, QuizCrud
+from quiz.models.crud import QuestionCrud, QuizCrud
 
 
 class ResultTestModel(BaseModel):
