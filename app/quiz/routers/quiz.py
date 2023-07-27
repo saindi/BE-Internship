@@ -21,23 +21,30 @@ from user.models.models import UserModel
 router = APIRouter(prefix='/quiz')
 
 
-@router.get("/", response_model=List[QuizSchema], dependencies=[Depends(jwt_bearer)])
+@router.get("/{company_id}", response_model=List[QuizSchema])
 async def get_all_quizzes(
+        company_id: int,
         skip: int = 0,
         limit: int = 100,
+        user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
-    quiz = await QuizModel.get_by_fields(db, return_single=False, skip=skip, limit=limit)
+    company = await CompanyModel.get_by_id(db, company_id)
 
-    if not quiz:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No such quizzes')
+    if not company.is_user_in_company(user.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='You are not a member of this company')
+
+    return company.quizzes[skip:limit]
+
+
+@router.get("/{quiz_id}/", response_model=QuizWithQuestion)
+async def get_quiz(quiz_id: int, user: UserModel = Depends(jwt_bearer), db: AsyncSession = Depends(get_async_session)):
+    quiz = await QuizModel.get_by_id(db, quiz_id)
+
+    if not quiz.company.is_user_in_company(user.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='A user cannot take quizzes from outside their company')
 
     return quiz
-
-
-@router.get("/{quiz_id}/", response_model=QuizWithQuestion, dependencies=[Depends(jwt_bearer)])
-async def get_quiz(quiz_id: int, db: AsyncSession = Depends(get_async_session)):
-    return await QuizModel.get_by_id(db, quiz_id)
 
 
 @router.post("/{company_id}/", response_model=QuizSchema, status_code=status.HTTP_201_CREATED)
@@ -79,7 +86,7 @@ async def update_info_quiz(
     quiz = await QuizModel.get_by_id(db, quiz_id)
 
     if not quiz.company.user_entitled_quiz(user.id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No delete permission')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No update permission')
 
     await quiz.update(db, data)
 
@@ -96,7 +103,7 @@ async def add_question_to_quiz(
     quiz = await QuizModel.get_by_id(db, quiz_id)
 
     if not quiz.company.user_entitled_quiz(user.id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No delete permission')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No update permission')
 
     await quiz.add_question(db, data)
 
@@ -111,6 +118,9 @@ async def pass_test(
         db: AsyncSession = Depends(get_async_session)
 ):
     quiz = await QuizModel.get_by_id(db, quiz_id)
+
+    if not quiz.company.is_user_in_company(user.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='A user cannot take quizzes from outside their company')
 
     result = await quiz.pass_test(db, user, data.answers)
 
