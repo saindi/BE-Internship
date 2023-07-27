@@ -132,3 +132,68 @@ async def test_delete_quiz(ac: AsyncClient, user_token: dict):
     assert response.status_code == status.HTTP_200_OK
     assert response_all.status_code == status.HTTP_400_BAD_REQUEST
     assert response_all.json()['detail'] == "No such quizzes"
+
+
+async def test_create_2(ac: AsyncClient, user_token: dict):
+    response_1 = await ac.post("/quiz/1/", json=quiz, headers=user_token)
+    response_2 = await ac.post("/quiz/3/", json=quiz, headers=user_token)
+
+    assert response_1.status_code == status.HTTP_201_CREATED
+    assert response_1.json()['id'] == 2
+    assert response_2.status_code == status.HTTP_201_CREATED
+    assert response_2.json()['id'] == 3
+
+
+async def test_pass_qiuz_bad_answer(ac: AsyncClient, user_token: dict):
+    response_few_answers = await ac.post("/quiz/2/pass_test/", json={
+        "answers": [
+            [0],
+        ]
+    }, headers=user_token)
+
+    response_many_answers = await ac.post("/quiz/2/pass_test/", json={
+        "answers": [
+            [0], [0, 1], [0, 1]
+        ]
+    }, headers=user_token)
+
+    response_same_answers = await ac.post("/quiz/2/pass_test/", json={
+        "answers": [
+            [0, 1, 1], [0, 1]
+        ]
+    }, headers=user_token)
+
+    response_no_answer_2 = await ac.post("/quiz/2/pass_test/", json={
+        "answers": [
+            [0, 2], [0, 1]
+        ]
+    }, headers=user_token)
+
+    response_bad_index = await ac.post("/quiz/2/pass_test/", json={
+        "answers": [
+            [0, -1], [0, 1]
+        ]
+    }, headers=user_token)
+
+    response_empty_answer = await ac.post("/quiz/2/pass_test/", json={
+        "answers": [
+            [], [0, 1]
+        ]
+    }, headers=user_token)
+
+    assert response_few_answers.status_code == status.HTTP_400_BAD_REQUEST
+    assert response_many_answers.status_code == status.HTTP_400_BAD_REQUEST
+    assert response_same_answers.status_code == status.HTTP_400_BAD_REQUEST
+    assert response_no_answer_2.status_code == status.HTTP_400_BAD_REQUEST
+    assert response_bad_index.status_code == status.HTTP_400_BAD_REQUEST
+    assert response_empty_answer.status_code == status.HTTP_400_BAD_REQUEST
+
+    assert response_few_answers.json()["detail"] == "The number of answers must be equal to the number of questions"
+    assert response_many_answers.json()["detail"] == "The number of answers must be equal to the number of questions"
+    assert response_same_answers.json()["detail"] == "Error entering answers for a question 0"
+    assert response_no_answer_2.json()["detail"] == "Error entering answers for a question 0 answer 1"
+    assert response_bad_index.json()["detail"] == "Error entering answers for a question 0 answer 1"
+    assert response_empty_answer.json()["detail"] == "Error entering answers for a question 0"
+
+
+

@@ -18,3 +18,4 @@ class UserModel(BaseModel, UserCrud):
     companies = relationship("CompanyModel", secondary="role", lazy="subquery")
     invitations = relationship("InvitationModel", lazy="subquery", cascade="all, delete-orphan")
     requests = relationship("RequestModel", lazy="subquery", cascade="all, delete-orphan")
+    results = relationship("ResultTestModel", lazy="subquery", cascade="all, delete-orphan")

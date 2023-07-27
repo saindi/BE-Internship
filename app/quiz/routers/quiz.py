@@ -6,7 +6,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from auth.auth import jwt_bearer
 from db.database import get_async_session
 from company.models import CompanyModel
-from quiz.schemas import QuizSchema, QuizData, QuizUpdate, QuestionData, QuizWithQuestion
+from quiz.schemas import (
+    QuizSchema,
+    QuizData,
+    QuizUpdate,
+    QuestionData,
+    QuizWithQuestion,
+    PassTestRequest,
+    ResultTestSchema
+)
 from quiz.models import QuizModel
 from user.models import UserModel
 
@@ -93,3 +101,17 @@ async def add_question_to_quiz(
     await quiz.add_question(db, data)
 
     return quiz
+
+
+@router.post("/{quiz_id}/pass_test/", response_model=ResultTestSchema, status_code=status.HTTP_201_CREATED)
+async def pass_test(
+        quiz_id: int,
+        data: PassTestRequest,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    quiz = await QuizModel.get_by_id(db, quiz_id)
+
+    result = await quiz.pass_test(db, user, data.answers)
+
+    return result
