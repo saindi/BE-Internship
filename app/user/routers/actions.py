@@ -8,7 +8,7 @@ from company.models.models import CompanyModel, RequestModel, RoleModel, Invitat
 from company.schemas import RequestSchema, InvitationSchema, RoleSchema, CompanySchema
 from db.database import get_async_session
 from quiz.models.models import AverageScoreGlobalModel, AverageScoreCompanyModel
-from quiz.schemas import CompanyRatingSchema, GlobalRatingSchema
+from quiz.schemas import CompanyRatingSchema, GlobalRatingSchema, ResultTestSchema
 from user.models.models import UserModel
 
 router = APIRouter(prefix='/user')
@@ -104,6 +104,11 @@ async def reject_invitation(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invite not found")
 
     return await invite.delete(db)
+
+
+@router.get("/test_results/", response_model=List[ResultTestSchema], dependencies=[Depends(get_async_session)])
+async def get_results(skip: int = 0, limit: int = 100, user: UserModel = Depends(jwt_bearer)):
+    return user.results[skip:limit]
 
 
 @router.get("/global_rating/", response_model=GlobalRatingSchema)

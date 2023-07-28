@@ -33,6 +33,7 @@ class CompanyModel(BaseModel, CompanyCrud):
     invitations = relationship("InvitationModel", lazy="subquery", cascade="all, delete-orphan")
     requests = relationship("RequestModel", lazy="subquery", cascade="all, delete-orphan")
     quizzes = relationship("QuizModel", cascade="all, delete-orphan", back_populates="company", lazy="subquery")
+    results = relationship("ResultTestModel", cascade="all, delete-orphan", lazy="subquery")
 
 
 class InvitationModel(BaseModel):

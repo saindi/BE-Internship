@@ -109,3 +109,21 @@ class GlobalRatingSchema(IdWithUser):
 
 class CompanyRatingSchema(GlobalRatingSchema):
     id_company: int
+
+
+class UserAnswer(BaseModel):
+    answer: str
+
+    model_config = SettingsConfigDict(from_attributes=True)
+
+
+class ResultQuestion(BaseModel):
+    question: str
+    answer_is_correct: bool
+    user_answers: List[UserAnswer]
+
+    model_config = SettingsConfigDict(from_attributes=True)
+
+
+class ResultData(ResultTestSchema):
+    questions: List[ResultQuestion]

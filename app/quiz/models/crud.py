@@ -2,7 +2,8 @@ from fastapi import status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.redis import add_test_result_to_redis
-from quiz.schemas import ResultTestSchema
+from quiz.schemas import ResultTestSchema, ResultData
+from utils.rating_calculation import get_rating
 
 
 class QuestionCrud:
@@ -68,22 +69,6 @@ class QuizCrud:
             for i, answer in enumerate(answers)
         ]
 
-    def create_test_date(self, user_id: int, answers: list, checking_answers: list) -> dict:
-        questions = []
-        for i, question in enumerate(self.questions):
-            questions.append({
-                'question': question.question,
-                'user_answer': answers[i],
-                'is_correct': checking_answers[i]
-            })
-
-        return {
-            'user_id': user_id,
-            'company_id': self.company.id,
-            'quiz_id': self.id,
-            'questions': questions
-        }
-
     def validate_answers(self, answers: list):
         # Checking for correlation between the number of answers to questions and the questions themselves
         if len(answers) != len(self.questions):
@@ -122,34 +107,22 @@ class QuizCrud:
             count_questions=len(self.questions)
         )
 
-        await result_test.create(db)
+        await result_test.create_with_questions(db, self, self.add_text_to_answers(answers), checking_answers)
 
-        await self.set_company_rating(db, test_user, self.company.id)
-        await self.set_global_rating(db, test_user)
-
-        await add_test_result_to_redis(
-            result_test.id,
-            self.create_test_date(test_user.id, self.add_text_to_answers(answers), checking_answers)
-        )
+        await AverageScoreCompanyCrud.set_company_rating(db, test_user, self.company.id)
+        await AverageScoreGlobalCrud.set_global_rating(db, test_user)
 
         return result_test
 
-    @staticmethod
-    def get_rating(results) -> float:
-        sum_correct, count_questions = 0, 0
-        for result in results:
-            sum_correct += result.count_correct_answers
-            count_questions += result.count_questions
 
-        return sum_correct / count_questions
-
+class AverageScoreCompanyCrud:
     @staticmethod
     async def set_company_rating(db: AsyncSession, user, company_id: int):
         from quiz.models.models import AverageScoreCompanyModel, ResultTestModel
 
         results = await ResultTestModel.get_by_fields(db, return_single=False, id_user=user.id, id_company=company_id)
 
-        rating = QuizCrud.get_rating(results)
+        rating = get_rating(results)
 
         average_score_company = await AverageScoreCompanyModel.get_by_fields(db, id_user=user.id, id_company=company_id)
 
@@ -159,13 +132,15 @@ class QuizCrud:
             average_company = AverageScoreCompanyModel(id_user=user.id, id_company=company_id, rating=rating)
             await average_company.create(db)
 
+
+class AverageScoreGlobalCrud:
     @staticmethod
     async def set_global_rating(db: AsyncSession, user):
         from quiz.models.models import AverageScoreGlobalModel, ResultTestModel
 
         results = await ResultTestModel.get_by_fields(db, return_single=False, id_user=user.id)
 
-        rating = QuizCrud.get_rating(results)
+        rating = get_rating(results)
 
         average_score_global = await AverageScoreGlobalModel.get_by_fields(db, id_user=user.id)
 
@@ -174,3 +149,57 @@ class QuizCrud:
         else:
             average_company = AverageScoreGlobalModel(id_user=user.id, rating=rating)
             await average_company.create(db)
+
+
+class ResultTestCrud:
+    async def create_with_questions(self, db: AsyncSession, quiz, user_answers: list, checking_answers: list):
+        from quiz.models.models import ResultQuestionModel
+
+        await self.create(db)
+
+        for i, question in enumerate(quiz.questions):
+            new_question = ResultQuestionModel(
+                id_result=self.id,
+                question=question.question,
+                answer_is_correct=checking_answers[i]
+            )
+
+            await new_question.create_with_answers(db, user_answers[i])
+
+        await db.refresh(self)
+
+        await add_test_result_to_redis(
+            self.id,
+            self.create_test_date()
+        )
+
+    def create_test_date(self) -> dict:
+        questions = []
+        for question in self.questions:
+            questions.append({
+                'question': question.question,
+                'user_answer': [answer.answer for answer in question.user_answers],
+                'is_correct': question.answer_is_correct
+            })
+
+        return {
+            'user_id': self.id_user,
+            'company_id': self.id_company,
+            'quiz_id': self.id_quiz,
+            'created_at': self.created_at.isoformat(),
+            'questions': questions
+        }
+
+
+class ResultQuestionCrud:
+    async def create_with_answers(self, db: AsyncSession, answers: list):
+        from quiz.models.models import UserAnswerModel
+
+        await self.create(db)
+
+        for answer in answers:
+            new_answer = UserAnswerModel(id_result_question=self.id, answer=answer)
+
+            await new_answer.create(db)
+
+        await db.refresh(self)

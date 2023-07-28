@@ -18,6 +18,8 @@ from quiz.schemas import (
 from quiz.models.models import QuizModel
 from user.models.models import UserModel
 
+from quiz.models.models import ResultTestModel, ResultQuestionModel, UserAnswerModel
+
 router = APIRouter(prefix='/quiz')
 
 
