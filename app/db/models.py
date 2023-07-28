@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import Column, Integer, DateTime
 
-from db.crud import BaseCRUD
+from db.base_crud import BaseCRUD
 
 
 class BaseModel(BaseCRUD):

@@ -8,7 +8,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from config import global_settings
 from auth.schemas import TokenSchema
 from db.database import async_session
-from user.models import UserModel
+from user.models.models import UserModel
 from utils.hashing import Hasher
 
 

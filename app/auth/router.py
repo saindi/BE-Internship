@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db.database import get_async_session
 from auth.auth import jwt_bearer
 from auth.schemas import TokenSchema, LoginSchema
-from user.models import UserModel
+from user.models.models import UserModel
 from user.schemas import UserSchema
 
 router = APIRouter(prefix='/auth')

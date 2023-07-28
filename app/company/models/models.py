@@ -3,7 +3,7 @@ import enum
 from sqlalchemy import Column, String, Integer, ForeignKey, Boolean, Enum
 from sqlalchemy.orm import relationship
 
-from company.crud import CompanyCrud
+from company.models.crud import CompanyCrud
 from db.models import BaseModel
 
 

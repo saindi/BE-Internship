@@ -12,7 +12,7 @@ from auth.auth import JWTBearer, jwt_bearer
 from db.database import get_async_session, metadata
 from config import global_settings
 from main import app
-from user.models import UserModel
+from user.models.models import UserModel
 from utils.hashing import Hasher
 
 engine_test = create_async_engine(global_settings.postgresql_test_url, poolclass=NullPool)

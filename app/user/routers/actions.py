@@ -4,10 +4,12 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.auth import jwt_bearer
-from company.models import CompanyModel, RequestModel, RoleModel, InvitationModel, RoleEnum
+from company.models.models import CompanyModel, RequestModel, RoleModel, InvitationModel, RoleEnum
 from company.schemas import RequestSchema, InvitationSchema, RoleSchema, CompanySchema
 from db.database import get_async_session
-from user.models import UserModel
+from quiz.models.models import AverageScoreGlobalModel, AverageScoreCompanyModel
+from quiz.schemas import CompanyRatingSchema, GlobalRatingSchema
+from user.models.models import UserModel
 
 router = APIRouter(prefix='/user')
 
@@ -102,3 +104,29 @@ async def reject_invitation(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invite not found")
 
     return await invite.delete(db)
+
+
+@router.get("/global_rating/", response_model=GlobalRatingSchema)
+async def get_global_rating(
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    global_rating = await AverageScoreGlobalModel.get_by_fields(db, id_user=user.id)
+
+    if not global_rating:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You haven't taken the quizzes yet")
+
+    return global_rating
+
+
+@router.get("/company_rating/", response_model=List[CompanyRatingSchema])
+async def get_company_rating(
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    company_rating = await AverageScoreCompanyModel.get_by_fields(db, return_single=False, id_user=user.id)
+
+    if not company_rating:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You haven't taken the quizzes yet")
+
+    return company_rating

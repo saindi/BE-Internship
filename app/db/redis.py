@@ -1,6 +1,6 @@
 import redis.asyncio as redis
 
-from main import global_settings
+from config import global_settings
 
 
 async def init_redis_pool() -> redis.Redis:

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 class CompanyCrud:
     async def create_with_owner(self, db: AsyncSession, owner_id: int):
-        from company.models import RoleModel, RoleEnum
+        from company.models.models import RoleModel, RoleEnum
 
         await self.create(db)
 
@@ -41,7 +41,7 @@ class CompanyCrud:
         return False
 
     def get_owner_id(self) -> Optional[int]:
-        from company.models import RoleEnum
+        from company.models.models import RoleEnum
 
         for role in self.roles:
             if role.role == RoleEnum.OWNER:
@@ -55,7 +55,7 @@ class CompanyCrud:
         return [user for user in self.users if user.id == id_owner][0]
 
     def get_id_admins(self) -> list:
-        from company.models import RoleEnum
+        from company.models.models import RoleEnum
 
         id_admins = [role.id_user for role in self.roles if role.role == RoleEnum.ADMIN]
 
@@ -66,8 +66,8 @@ class CompanyCrud:
 
         return admins
 
-    async def add_invite_to_company(self, db, target_user):
-        from company.models import InvitationModel
+    async def add_invite_to_company(self, db: AsyncSession, target_user):
+        from company.models.models import InvitationModel
 
         for user_company in self.users:
             if user_company.id == target_user.id:

@@ -1,8 +1,33 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, Boolean
+from sqlalchemy import Column, String, Integer, ForeignKey, Boolean, Float
 from sqlalchemy.orm import relationship
 
 from db.models import BaseModel
-from quiz.crud import QuestionCrud, QuizCrud
+from quiz.models.crud import QuestionCrud, QuizCrud
+
+
+class ResultTestModel(BaseModel):
+    __tablename__ = "resul_test"
+
+    count_correct_answers = Column(Integer, nullable=False)
+    count_questions = Column(Integer, nullable=False)
+    id_user = Column(Integer, ForeignKey("user.id"), nullable=False)
+    id_company = Column(Integer, ForeignKey("company.id"), nullable=False)
+    id_quiz = Column(Integer, ForeignKey("quiz.id"), nullable=False)
+
+
+class AverageScoreCompanyModel(BaseModel):
+    __tablename__ = "average_score_company"
+
+    id_user = Column(Integer, ForeignKey("user.id"), nullable=False)
+    id_company = Column(Integer, ForeignKey("company.id"), nullable=False)
+    rating = Column(Float, nullable=False)
+
+
+class AverageScoreGlobalModel(BaseModel):
+    __tablename__ = "average_score_global"
+
+    id_user = Column(Integer, ForeignKey("user.id"), nullable=False, unique=True)
+    rating = Column(Float, nullable=False)
 
 
 class AnswerModel(BaseModel):
