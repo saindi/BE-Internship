@@ -20,6 +20,7 @@ class Settings(BaseSettings):
 
     redis_host: str
     redis_port: int
+    redis_db: int
 
     jwt_secret: str
     jwt_algorithm: str
@@ -43,7 +44,7 @@ class Settings(BaseSettings):
 
     @property
     def redis_url(self) -> str:
-        return f"redis://{self.redis_host}:{self.redis_port}"
+        return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
 
 
 global_settings = Settings()

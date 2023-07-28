@@ -1,6 +1,7 @@
 from fastapi import status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from db.redis import add_test_result_to_redis
 from quiz.schemas import ResultTestSchema
 
 
@@ -61,6 +62,28 @@ class QuizCrud:
 
         return [i for i, answer in enumerate(question.answers) if answer.is_correct]
 
+    def add_text_to_answers(self, answers: list) -> list:
+        return [
+            [f"{item}. {self.questions[i].answers[j].answer}" for j, item in enumerate(answer)]
+            for i, answer in enumerate(answers)
+        ]
+
+    def create_test_date(self, user_id: int, answers: list, checking_answers: list) -> dict:
+        questions = []
+        for i, question in enumerate(self.questions):
+            questions.append({
+                'question': question.question,
+                'user_answer': answers[i],
+                'is_correct': checking_answers[i]
+            })
+
+        return {
+            'user_id': user_id,
+            'company_id': self.company.id,
+            'quiz_id': self.id,
+            'questions': questions
+        }
+
     def validate_answers(self, answers: list):
         # Checking for correlation between the number of answers to questions and the questions themselves
         if len(answers) != len(self.questions):
@@ -103,6 +126,11 @@ class QuizCrud:
 
         await self.set_company_rating(db, test_user, self.company.id)
         await self.set_global_rating(db, test_user)
+
+        await add_test_result_to_redis(
+            result_test.id,
+            self.create_test_date(test_user.id, self.add_text_to_answers(answers), checking_answers)
+        )
 
         return result_test
 
