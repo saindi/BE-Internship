@@ -17,3 +17,11 @@ async def add_test_result_to_redis(result_id: int, data: dict):
     key = f"result_test:{result_id}"
 
     await redis.setex(key, timedelta(hours=48), json.dumps(data))
+
+
+async def get_data_from_redis(name: str, id: int):
+    redis = await init_redis_pool()
+
+    data = await redis.get(f'{name}:{id}')
+
+    return json.loads(data) if data else None

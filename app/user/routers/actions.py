@@ -7,6 +7,7 @@ from auth.auth import jwt_bearer
 from company.models.models import CompanyModel, RequestModel, RoleModel, InvitationModel, RoleEnum
 from company.schemas import RequestSchema, InvitationSchema, RoleSchema, CompanySchema
 from db.database import get_async_session
+from db.redis import get_data_from_redis
 from quiz.models.models import AverageScoreGlobalModel, AverageScoreCompanyModel, ResultTestModel
 from quiz.schemas import CompanyRatingSchema, GlobalRatingSchema, ResultTestSchema, ResultData
 from user.models.models import UserModel
@@ -106,7 +107,7 @@ async def reject_invitation(
     return await invite.delete(db)
 
 
-@router.get("/test_result/", response_model=List[ResultTestSchema])
+@router.get("/test_results/", response_model=List[ResultTestSchema])
 async def get_results(
         skip: int = 0,
         limit: int = 100,
@@ -122,11 +123,16 @@ async def get_results(
 
 
 @router.get("/test_result/{result_test_id}/", response_model=ResultData)
-async def get_results(
+async def get_result_by_id(
         result_test_id: int,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
+    result_from_redis = await get_data_from_redis('result_test', result_test_id)
+
+    if result_from_redis:
+        return result_from_redis
+
     result = await ResultTestModel.get_by_fields(db, id_user=user.id, id=result_test_id)
 
     if result is None:

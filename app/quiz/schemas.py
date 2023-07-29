@@ -126,10 +126,15 @@ class ResultQuestion(BaseModel):
 
     @field_validator('user_answers', mode='before')
     def validate_user_answers(cls, user_answers):
+        from quiz.models.models import UserAnswerModel
+
         if not user_answers:
             raise ValueError("Not such user_answers")
 
-        return [answer.answer for answer in user_answers]
+        if isinstance(user_answers[0], UserAnswerModel):
+            return [answer.answer for answer in user_answers]
+
+        return user_answers
 
 
 class ResultData(BaseModel):
@@ -146,6 +151,9 @@ class ResultData(BaseModel):
     @field_validator('created_at', mode='before')
     def validate_created_at(cls, created_at):
         if not created_at:
-            raise ValueError("Not such user_answers")
+            raise ValueError("Not such created_at")
 
-        return created_at.isoformat()
+        if isinstance(created_at, datetime):
+            return created_at.isoformat()
+
+        return created_at
