@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import List, Union
+from typing import List
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 from pydantic_settings import SettingsConfigDict
 
 
@@ -120,10 +120,32 @@ class UserAnswer(BaseModel):
 class ResultQuestion(BaseModel):
     question: str
     answer_is_correct: bool
-    user_answers: List[UserAnswer]
+    user_answers: List[str]
 
     model_config = SettingsConfigDict(from_attributes=True)
 
+    @field_validator('user_answers', mode='before')
+    def validate_user_answers(cls, user_answers):
+        if not user_answers:
+            raise ValueError("Not such user_answers")
 
-class ResultData(ResultTestSchema):
+        return [answer.answer for answer in user_answers]
+
+
+class ResultData(BaseModel):
+    id: int
+    id_user: int
+    id_company: int
+    id_quiz: int
+    created_at: str = Field(alias="created_at", format="%Y-%m-%d %H:%M:%S.%f%z")
+
     questions: List[ResultQuestion]
+
+    model_config = SettingsConfigDict(from_attributes=True)
+
+    @field_validator('created_at', mode='before')
+    def validate_created_at(cls, created_at):
+        if not created_at:
+            raise ValueError("Not such user_answers")
+
+        return created_at.isoformat()

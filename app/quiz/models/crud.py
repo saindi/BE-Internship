@@ -170,25 +170,8 @@ class ResultTestCrud:
 
         await add_test_result_to_redis(
             self.id,
-            self.create_test_date()
+            ResultData.model_validate(self).model_dump()
         )
-
-    def create_test_date(self) -> dict:
-        questions = []
-        for question in self.questions:
-            questions.append({
-                'question': question.question,
-                'user_answer': [answer.answer for answer in question.user_answers],
-                'is_correct': question.answer_is_correct
-            })
-
-        return {
-            'user_id': self.id_user,
-            'company_id': self.id_company,
-            'quiz_id': self.id_quiz,
-            'created_at': self.created_at.isoformat(),
-            'questions': questions
-        }
 
 
 class ResultQuestionCrud:
