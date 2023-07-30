@@ -170,6 +170,7 @@ class ResultTestCrud:
 
         await add_test_result_to_redis(
             self.id,
+            self.id_user,
             ResultData.model_validate(self).model_dump()
         )
 

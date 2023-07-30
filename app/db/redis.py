@@ -11,17 +11,17 @@ async def init_redis_pool() -> redis.Redis:
     return redis_c
 
 
-async def add_test_result_to_redis(result_id: int, data: dict):
+async def add_test_result_to_redis(result_id: int, user_id, data: dict):
     redis = await init_redis_pool()
 
-    key = f"result_test:{result_id}"
+    key = f"result_test:{result_id:}:id_user:{user_id}"
 
     await redis.setex(key, timedelta(hours=48), json.dumps(data))
 
 
-async def get_data_from_redis(name: str, id: int):
+async def get_result_from_redis(result_id: int, user_id: int):
     redis = await init_redis_pool()
 
-    data = await redis.get(f'{name}:{id}')
+    data = await redis.get(f"result_test:{result_id}:id_user:{user_id}")
 
     return json.loads(data) if data else None

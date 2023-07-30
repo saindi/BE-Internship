@@ -15,6 +15,6 @@ class UserModel(BaseModel, UserCrud):
     is_superuser = Column(Boolean, default=False, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
 
-    companies = relationship("CompanyModel", secondary="role", lazy="subquery")
+    companies = relationship("CompanyModel", secondary="role", lazy="subquery", overlaps="users,roles")
     invitations = relationship("InvitationModel", lazy="subquery", cascade="all, delete-orphan")
     requests = relationship("RequestModel", lazy="subquery", cascade="all, delete-orphan")

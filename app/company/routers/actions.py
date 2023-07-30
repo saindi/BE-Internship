@@ -2,14 +2,17 @@ from typing import List
 
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import StreamingResponse
 
 from auth.auth import jwt_bearer
 from company.schemas import InvitationSchema, RequestSchema, RoleSchema
 from db.database import get_async_session
 from company.models.models import CompanyModel, InvitationModel, RequestModel, RoleModel, RoleEnum
-from quiz.schemas import QuizSchema
+from quiz.models.models import ResultTestModel
+from quiz.schemas import QuizSchema, ResultData
 from user.models.models import UserModel
 from user.schemas import UserSchema
+from utils.generate_csv import generate_csv_data_as_results
 
 router = APIRouter(prefix='/company')
 
@@ -228,3 +231,167 @@ async def get_quizzes(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
 
     return company.quizzes[skip:limit]
+
+
+@router.get("/{company_id}/results/", response_model=List[ResultData])
+async def get_quizzes(
+        company_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    company = await CompanyModel.get_by_id(db, company_id)
+
+    if not company.user_entitled_quiz(user.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
+
+    results = await ResultTestModel.get_by_fields(db, return_single=False, id_company=company_id, skip=skip, limit=limit)
+
+    if not results:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
+
+    return results
+
+
+@router.get("/{company_id}/results/csv/")
+async def get_quizzes(
+        company_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    company = await CompanyModel.get_by_id(db, company_id)
+
+    if not company.user_entitled_quiz(user.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
+
+    results = await ResultTestModel.get_by_fields(db, return_single=False, id_company=company_id, skip=skip, limit=limit)
+
+    csv = generate_csv_data_as_results([ResultData.model_validate(result).model_dump() for result in results])
+
+    return StreamingResponse(csv, media_type="multipart/form-data",
+                             headers={"Content-Disposition": "attachment; filename=data.csv"})
+
+
+@router.get("/{company_id}/results_user/{user_id}/", response_model=List[ResultData])
+async def get_quizzes(
+        company_id: int,
+        user_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    company = await CompanyModel.get_by_id(db, company_id)
+
+    if not company.is_user_in_company(user.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
+
+    results = await ResultTestModel.get_by_fields(
+        db,
+        return_single=False,
+        id_user=user_id,
+        id_company=company_id,
+        skip=skip,
+        limit=limit
+    )
+
+    if not results:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
+
+    return results
+
+
+@router.get("/{company_id}/results_user/{user_id}/csv/")
+async def get_quizzes(
+        company_id: int,
+        user_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    company = await CompanyModel.get_by_id(db, company_id)
+
+    if not company.is_user_in_company(user.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
+
+    results = await ResultTestModel.get_by_fields(
+        db,
+        return_single=False,
+        id_user=user_id,
+        id_company=company_id,
+        skip=skip,
+        limit=limit
+    )
+
+    if not results:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
+
+    csv = generate_csv_data_as_results([ResultData.model_validate(result).model_dump() for result in results])
+
+    return StreamingResponse(csv, media_type="multipart/form-data",
+                             headers={"Content-Disposition": "attachment; filename=data.csv"})
+
+
+@router.get("/{company_id}/results_quiz/{quiz_id}/", response_model=List[ResultData])
+async def get_quizzes(
+        company_id: int,
+        quiz_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    company = await CompanyModel.get_by_id(db, company_id)
+
+    if not company.is_user_in_company(user.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
+
+    results = await ResultTestModel.get_by_fields(
+        db,
+        return_single=False,
+        id_quiz=quiz_id,
+        id_company=company_id,
+        skip=skip,
+        limit=limit
+    )
+
+    if not results:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
+
+    return results
+
+
+@router.get("/{company_id}/results_quiz/{quiz_id}/csv/")
+async def get_quizzes(
+        company_id: int,
+        quiz_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    company = await CompanyModel.get_by_id(db, company_id)
+
+    if not company.is_user_in_company(user.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
+
+    results = await ResultTestModel.get_by_fields(
+        db,
+        return_single=False,
+        id_quiz=quiz_id,
+        id_company=company_id,
+        skip=skip,
+        limit=limit
+    )
+
+    if not results:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
+
+    csv = generate_csv_data_as_results([ResultData.model_validate(result).model_dump() for result in results])
+
+    return StreamingResponse(csv, media_type="multipart/form-data",
+                             headers={"Content-Disposition": "attachment; filename=data.csv"})

@@ -29,7 +29,7 @@ class CompanyModel(BaseModel, CompanyCrud):
     is_hidden = Column(Boolean, default=False, nullable=False)
 
     users = relationship("UserModel", secondary="role", lazy="subquery")
-    roles = relationship("RoleModel", lazy="subquery", cascade="all, delete-orphan")
+    roles = relationship("RoleModel", lazy="subquery", cascade="all, delete-orphan", overlaps="users")
     invitations = relationship("InvitationModel", lazy="subquery", cascade="all, delete-orphan")
     requests = relationship("RequestModel", lazy="subquery", cascade="all, delete-orphan")
     quizzes = relationship("QuizModel", cascade="all, delete-orphan", back_populates="company", lazy="subquery")
