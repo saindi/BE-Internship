@@ -73,4 +73,6 @@ async def delete_company(
     if not company.user_can_delete(user.id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='This user cannot delete сompany')
 
-    return await company.delete(db)
+    result = await company.delete(db)
+
+    return result

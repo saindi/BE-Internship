@@ -11,10 +11,10 @@ class UserCrud:
         return Hasher.verify_password(hashed_password, self.hashed_password)
 
     def can_edit(self, user_id: int) -> bool:
-        return self.id == user_id or self.is_superuser
+        return self.id == user_id
 
     def can_delete(self, user_id: int) -> bool:
-        return self.id == user_id or self.is_superuser
+        return self.id == user_id
 
     async def add_request_to_company(self, db: AsyncSession, company):
         for user_company in self.companies:
