@@ -236,6 +236,8 @@ async def get_quizzes(
 @router.get("/{company_id}/results/", response_model=List[ResultData])
 async def get_results(
         company_id: int,
+        skip: int = 0,
+        limit: int = 100,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
@@ -249,7 +251,7 @@ async def get_results(
     if not results:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
 
-    return results
+    return results[skip:limit]
 
 
 @router.get("/{company_id}/results/csv/")
@@ -278,6 +280,8 @@ async def get_results_csv(
 async def get_user_results(
         company_id: int,
         user_id: int,
+        skip: int = 0,
+        limit: int = 100,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
@@ -291,7 +295,7 @@ async def get_user_results(
     if not results:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
 
-    return results
+    return results[skip:limit]
 
 
 @router.get("/{company_id}/results_user/{user_id}/csv/")
@@ -321,6 +325,8 @@ async def get_user_results_csv(
 async def get_results_quiz(
         company_id: int,
         quiz_id: int,
+        skip: int = 0,
+        limit: int = 100,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
@@ -334,7 +340,7 @@ async def get_results_quiz(
     if not results:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
 
-    return results
+    return results[skip:limit]
 
 
 @router.get("/{company_id}/results_quiz/{quiz_id}/csv/")

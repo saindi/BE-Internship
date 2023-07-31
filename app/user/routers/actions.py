@@ -110,13 +110,17 @@ async def reject_invitation(
 
 
 @router.get("/test_results/", response_model=List[ResultData])
-async def get_results(user: UserModel = Depends(jwt_bearer)):
+async def get_results(
+        skip: int = 0,
+        limit: int = 100,
+        user: UserModel = Depends(jwt_bearer)
+):
     results = await get_values_by_keys(id_user=user.id)
 
     if not results:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
 
-    return results
+    return results[skip:limit]
 
 
 @router.get("/test_results/csv/")
