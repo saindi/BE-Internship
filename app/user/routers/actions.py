@@ -79,7 +79,6 @@ async def delete_invitation(
 
 @router.get("/invitations/", response_model=List[InvitationSchema])
 async def get_invitations(user: UserModel = Depends(jwt_bearer), db: AsyncSession = Depends(get_async_session)):
-    print(await user.invitations(db))
     return await user.invitations(db)
 
 
