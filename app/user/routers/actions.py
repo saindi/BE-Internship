@@ -18,8 +18,13 @@ router = APIRouter(prefix='/user')
 
 
 @router.get("/companies/", response_model=List[CompanySchema])
-async def get_requests(skip: int = 0, limit: int = 100, user: UserModel = Depends(jwt_bearer)):
-    return user.companies[skip:limit]
+async def get_requests(
+        skip: int = 0,
+        limit: int = 100,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    return (await user.companies(db))[skip:limit]
 
 
 @router.get("/company/{company_id}/exit/", response_model=List[CompanySchema])
@@ -41,8 +46,8 @@ async def exit_from_company(
 
 
 @router.get("/requests/", response_model=List[RequestSchema])
-async def get_requests(user: UserModel = Depends(jwt_bearer)):
-    return user.requests
+async def get_requests(user: UserModel = Depends(jwt_bearer), db: AsyncSession = Depends(get_async_session)):
+    return await user.requests(db)
 
 
 @router.post("/request/", response_model=RequestSchema, status_code=status.HTTP_201_CREATED)
@@ -73,8 +78,9 @@ async def delete_invitation(
 
 
 @router.get("/invitations/", response_model=List[InvitationSchema])
-async def get_invitations(user: UserModel = Depends(jwt_bearer)):
-    return user.invitations
+async def get_invitations(user: UserModel = Depends(jwt_bearer), db: AsyncSession = Depends(get_async_session)):
+    print(await user.invitations(db))
+    return await user.invitations(db)
 
 
 @router.get("/invitation/{invite_id}/accept/", response_model=RoleSchema)

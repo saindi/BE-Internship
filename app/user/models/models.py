@@ -1,5 +1,4 @@
 from sqlalchemy import Boolean, Column, String
-from sqlalchemy.orm import relationship
 
 from db.models import BaseModel
 from user.models.crud import UserCrud
@@ -14,7 +13,3 @@ class UserModel(BaseModel, UserCrud):
     is_active = Column(Boolean, default=True, nullable=False)
     is_superuser = Column(Boolean, default=False, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
-
-    companies = relationship("CompanyModel", secondary="role", lazy="subquery", overlaps="users,roles")
-    invitations = relationship("InvitationModel", lazy="subquery", cascade="all, delete-orphan")
-    requests = relationship("RequestModel", lazy="subquery", cascade="all, delete-orphan")
