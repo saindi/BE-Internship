@@ -39,11 +39,11 @@ class InvitationModel(BaseModel):
     __tablename__ = "invitation"
 
     id_company = Column(Integer, ForeignKey("company.id"), nullable=False)
-    id_user = Column(Integer, ForeignKey("user.id"), nullable=False)
+    id_user = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
 
 
 class RequestModel(BaseModel):
     __tablename__ = "request"
 
     id_company = Column(Integer, ForeignKey("company.id"), nullable=False)
-    id_user = Column(Integer, ForeignKey("user.id"), nullable=False)
+    id_user = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)

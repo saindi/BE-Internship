@@ -51,7 +51,6 @@ class QuizModel(BaseModel, QuizCrud):
 
     company = relationship("CompanyModel", back_populates="quizzes", lazy="subquery")
     questions = relationship("QuestionModel", cascade="all, delete-orphan", back_populates="quiz", lazy="subquery")
-    results = relationship("ResultTestModel", cascade="all, delete-orphan", lazy="subquery")
 
 
 class ResultTestModel(BaseModel, ResultTestCrud):
@@ -61,7 +60,7 @@ class ResultTestModel(BaseModel, ResultTestCrud):
     count_questions = Column(Integer, nullable=False)
     id_user = Column(Integer, ForeignKey("user.id"), nullable=False)
     id_company = Column(Integer, ForeignKey("company.id"), nullable=False)
-    id_quiz = Column(Integer, ForeignKey("quiz.id"), nullable=False)
+    id_quiz = Column(Integer, ForeignKey("quiz.id", ondelete="CASCADE"), nullable=False)
 
     questions = relationship("ResultQuestionModel", cascade="all, delete-orphan", lazy="subquery")
 
