@@ -8,7 +8,7 @@ from auth.auth import jwt_bearer
 from company.schemas import InvitationSchema, RequestSchema, RoleSchema
 from db.database import get_async_session
 from company.models.models import CompanyModel, InvitationModel, RequestModel, RoleModel, RoleEnum
-from quiz.models.models import ResultTestModel
+from db.redis_actions import get_values_by_keys
 from quiz.schemas import QuizSchema, ResultData
 from user.models.models import UserModel
 from user.schemas import UserSchema
@@ -234,10 +234,8 @@ async def get_quizzes(
 
 
 @router.get("/{company_id}/results/", response_model=List[ResultData])
-async def get_quizzes(
+async def get_results(
         company_id: int,
-        skip: int = 0,
-        limit: int = 100,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
@@ -246,7 +244,7 @@ async def get_quizzes(
     if not company.user_entitled_quiz(user.id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
 
-    results = await ResultTestModel.get_by_fields(db, return_single=False, id_company=company_id, skip=skip, limit=limit)
+    results = await get_values_by_keys(id_company=company_id)
 
     if not results:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
@@ -255,10 +253,8 @@ async def get_quizzes(
 
 
 @router.get("/{company_id}/results/csv/")
-async def get_quizzes(
+async def get_results_csv(
         company_id: int,
-        skip: int = 0,
-        limit: int = 100,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
@@ -267,7 +263,10 @@ async def get_quizzes(
     if not company.user_entitled_quiz(user.id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
 
-    results = await ResultTestModel.get_by_fields(db, return_single=False, id_company=company_id, skip=skip, limit=limit)
+    results = await get_values_by_keys(id_company=company_id)
+
+    if not results:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
 
     csv = generate_csv_data_as_results([ResultData.model_validate(result).model_dump() for result in results])
 
@@ -276,11 +275,9 @@ async def get_quizzes(
 
 
 @router.get("/{company_id}/results_user/{user_id}/", response_model=List[ResultData])
-async def get_quizzes(
+async def get_user_results(
         company_id: int,
         user_id: int,
-        skip: int = 0,
-        limit: int = 100,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
@@ -289,14 +286,7 @@ async def get_quizzes(
     if not company.is_user_in_company(user.id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
 
-    results = await ResultTestModel.get_by_fields(
-        db,
-        return_single=False,
-        id_user=user_id,
-        id_company=company_id,
-        skip=skip,
-        limit=limit
-    )
+    results = await get_values_by_keys(id_user=user_id, id_company=company_id)
 
     if not results:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
@@ -305,11 +295,9 @@ async def get_quizzes(
 
 
 @router.get("/{company_id}/results_user/{user_id}/csv/")
-async def get_quizzes(
+async def get_user_results_csv(
         company_id: int,
         user_id: int,
-        skip: int = 0,
-        limit: int = 100,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
@@ -318,14 +306,7 @@ async def get_quizzes(
     if not company.is_user_in_company(user.id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
 
-    results = await ResultTestModel.get_by_fields(
-        db,
-        return_single=False,
-        id_user=user_id,
-        id_company=company_id,
-        skip=skip,
-        limit=limit
-    )
+    results = await get_values_by_keys(id_user=user_id, id_company=company_id)
 
     if not results:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
@@ -337,11 +318,9 @@ async def get_quizzes(
 
 
 @router.get("/{company_id}/results_quiz/{quiz_id}/", response_model=List[ResultData])
-async def get_quizzes(
+async def get_results_quiz(
         company_id: int,
         quiz_id: int,
-        skip: int = 0,
-        limit: int = 100,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
@@ -350,14 +329,7 @@ async def get_quizzes(
     if not company.is_user_in_company(user.id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
 
-    results = await ResultTestModel.get_by_fields(
-        db,
-        return_single=False,
-        id_quiz=quiz_id,
-        id_company=company_id,
-        skip=skip,
-        limit=limit
-    )
+    results = await get_values_by_keys(id_company=company_id, id_quiz=quiz_id)
 
     if not results:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
@@ -366,11 +338,9 @@ async def get_quizzes(
 
 
 @router.get("/{company_id}/results_quiz/{quiz_id}/csv/")
-async def get_quizzes(
+async def get_results_quiz_csv(
         company_id: int,
         quiz_id: int,
-        skip: int = 0,
-        limit: int = 100,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
@@ -379,14 +349,7 @@ async def get_quizzes(
     if not company.is_user_in_company(user.id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
 
-    results = await ResultTestModel.get_by_fields(
-        db,
-        return_single=False,
-        id_quiz=quiz_id,
-        id_company=company_id,
-        skip=skip,
-        limit=limit
-    )
+    results = await get_values_by_keys(id_company=company_id, id_quiz=quiz_id)
 
     if not results:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")

@@ -1,7 +1,7 @@
 from fastapi import status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.redis import add_test_result_to_redis
+from db.redis_actions import add_test_result_to_redis
 from quiz.schemas import ResultTestSchema, ResultData
 from utils.rating_calculation import get_rating
 
@@ -171,6 +171,8 @@ class ResultTestCrud:
         await add_test_result_to_redis(
             self.id,
             self.id_user,
+            self.id_company,
+            self.id_quiz,
             ResultData.model_validate(self).model_dump()
         )
 

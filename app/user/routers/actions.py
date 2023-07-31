@@ -8,9 +8,9 @@ from auth.auth import jwt_bearer
 from company.models.models import CompanyModel, RequestModel, RoleModel, InvitationModel, RoleEnum
 from company.schemas import RequestSchema, InvitationSchema, RoleSchema, CompanySchema
 from db.database import get_async_session
-from db.redis import get_result_from_redis
+from db.redis_actions import get_values_by_keys, get_value_by_keys
 from quiz.models.models import AverageScoreGlobalModel, AverageScoreCompanyModel, ResultTestModel
-from quiz.schemas import CompanyRatingSchema, GlobalRatingSchema, ResultTestSchema, ResultData
+from quiz.schemas import CompanyRatingSchema, GlobalRatingSchema, ResultData
 from user.models.models import UserModel
 from utils.generate_csv import generate_csv_data_as_result, generate_csv_data_as_results
 
@@ -109,14 +109,9 @@ async def reject_invitation(
     return await invite.delete(db)
 
 
-@router.get("/test_results/", response_model=List[ResultTestSchema])
-async def get_results(
-        skip: int = 0,
-        limit: int = 100,
-        user: UserModel = Depends(jwt_bearer),
-        db: AsyncSession = Depends(get_async_session)
-):
-    results = await ResultTestModel.get_by_fields(db, return_single=False, id_user=user.id, skip=skip, limit=limit)
+@router.get("/test_results/", response_model=List[ResultData])
+async def get_results(user: UserModel = Depends(jwt_bearer)):
+    results = await get_values_by_keys(id_user=user.id)
 
     if not results:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
@@ -125,13 +120,8 @@ async def get_results(
 
 
 @router.get("/test_results/csv/")
-async def get_results_csv(
-        skip: int = 0,
-        limit: int = 100,
-        user: UserModel = Depends(jwt_bearer),
-        db: AsyncSession = Depends(get_async_session)
-):
-    results = await ResultTestModel.get_by_fields(db, return_single=False, id_user=user.id, skip=skip, limit=limit)
+async def get_results_csv(user: UserModel = Depends(jwt_bearer)):
+    results = await get_values_by_keys(id_user=user.id)
 
     if not results:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
@@ -148,7 +138,7 @@ async def get_result_by_id(
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
-    result_from_redis = await get_result_from_redis(result_test_id, user.id)
+    result_from_redis = await get_value_by_keys(result_test=result_test_id, id_user=user.id)
 
     if result_from_redis:
         return result_from_redis
@@ -167,9 +157,9 @@ async def get_result_csv(
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
-    result = await get_result_from_redis(result_test_id, user.id)
+    result_from_redis = await get_value_by_keys(id_user=user.id, result_test=result_test_id)
 
-    if not result:
+    if not result_from_redis:
         result = await ResultTestModel.get_by_fields(db, id_user=user.id, id=result_test_id)
 
         if not result:
