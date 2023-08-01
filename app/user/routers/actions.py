@@ -11,7 +11,7 @@ from db.database import get_async_session
 from db.redis_actions import get_values_by_keys, get_value_by_keys
 from quiz.models.models import AverageScoreGlobalModel, AverageScoreCompanyModel, ResultTestModel
 from quiz.schemas import CompanyRatingSchema, GlobalRatingSchema, ResultData
-from user.models.models import UserModel
+from user.models.models import UserModel, FileNameEnum
 from utils.generate_csv import generate_csv_data_as_result, generate_csv_data_as_results
 
 router = APIRouter(prefix='/user')
@@ -138,7 +138,7 @@ async def get_results_csv(user: UserModel = Depends(jwt_bearer)):
     csv = generate_csv_data_as_results([ResultData.model_validate(result).model_dump() for result in results])
 
     return StreamingResponse(csv, media_type="multipart/form-data",
-                             headers={"Content-Disposition": "attachment; filename=data.csv"})
+                             headers={"Content-Disposition": f"attachment; filename={FileNameEnum.ALL_RESULTS_USER.value}"})
 
 
 @router.get("/test_result/{result_test_id}/", response_model=ResultData)
@@ -177,7 +177,7 @@ async def get_result_csv(
     csv = generate_csv_data_as_result(ResultData.model_validate(result).model_dump())
 
     return StreamingResponse(csv, media_type="multipart/form-data",
-                             headers={"Content-Disposition": "attachment; filename=data.csv"})
+                             headers={"Content-Disposition": f"attachment; filename={FileNameEnum.TEST_RESULT.value}"})
 
 
 @router.get("/global_rating/", response_model=GlobalRatingSchema)
