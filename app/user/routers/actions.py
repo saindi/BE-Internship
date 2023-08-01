@@ -177,7 +177,7 @@ async def get_results_csv(user_id, user: UserModel = Depends(jwt_bearer)):
     csv = generate_csv_data_as_results([ResultData.model_validate(result).model_dump() for result in results])
 
     return StreamingResponse(csv, media_type="multipart/form-data",
-                             headers={"Content-Disposition": "attachment; filename=data.csv"})
+                             headers={"Content-Disposition": f"attachment; filename={FileNameEnum.ALL_RESULTS_USER.value}"})
 
 
 @router.get("/{user_id}/test_result/{result_test_id}/", response_model=ResultData)
@@ -224,7 +224,7 @@ async def get_result_csv(
     csv = generate_csv_data_as_result(ResultData.model_validate(result).model_dump())
 
     return StreamingResponse(csv, media_type="multipart/form-data",
-                             headers={"Content-Disposition": "attachment; filename=data.csv"})
+                             headers={"Content-Disposition": f"attachment; filename={FileNameEnum.TEST_RESULT.value}"})
 
 
 @router.get("/{user_id}/global_rating/", response_model=GlobalRatingSchema)

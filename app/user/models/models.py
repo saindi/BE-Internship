@@ -1,7 +1,14 @@
+import enum
+
 from sqlalchemy import Boolean, Column, String
 
 from db.models import BaseModel
 from user.models.crud import UserCrud
+
+
+class FileNameEnum(enum.Enum):
+    ALL_RESULTS_USER = 'all_results_user.csv'
+    TEST_RESULT = 'test_result.csv'
 
 
 class UserModel(BaseModel, UserCrud):

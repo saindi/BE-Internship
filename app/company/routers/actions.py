@@ -7,7 +7,7 @@ from starlette.responses import StreamingResponse
 from auth.auth import jwt_bearer
 from company.schemas import InvitationSchema, RequestSchema, RoleSchema
 from db.database import get_async_session
-from company.models.models import CompanyModel, InvitationModel, RequestModel, RoleModel, RoleEnum
+from company.models.models import CompanyModel, InvitationModel, RequestModel, RoleModel, RoleEnum, FileNameEnum
 from db.redis_actions import get_values_by_keys
 from quiz.schemas import QuizSchema, ResultData
 from user.models.models import UserModel
@@ -273,7 +273,7 @@ async def get_results_csv(
     csv = generate_csv_data_as_results([ResultData.model_validate(result).model_dump() for result in results])
 
     return StreamingResponse(csv, media_type="multipart/form-data",
-                             headers={"Content-Disposition": "attachment; filename=data.csv"})
+                             headers={"Content-Disposition": f"attachment; filename={FileNameEnum.COMPANY_RESULTS.value}"})
 
 
 @router.get("/{company_id}/results_user/{user_id}/", response_model=List[ResultData])
@@ -318,7 +318,7 @@ async def get_user_results_csv(
     csv = generate_csv_data_as_results([ResultData.model_validate(result).model_dump() for result in results])
 
     return StreamingResponse(csv, media_type="multipart/form-data",
-                             headers={"Content-Disposition": "attachment; filename=data.csv"})
+                             headers={"Content-Disposition": f"attachment; filename={FileNameEnum.COMPANY_USER_RESULTS.value}"})
 
 
 @router.get("/{company_id}/results_quiz/{quiz_id}/", response_model=List[ResultData])
@@ -363,4 +363,4 @@ async def get_results_quiz_csv(
     csv = generate_csv_data_as_results([ResultData.model_validate(result).model_dump() for result in results])
 
     return StreamingResponse(csv, media_type="multipart/form-data",
-                             headers={"Content-Disposition": "attachment; filename=data.csv"})
+                             headers={"Content-Disposition": f"attachment; filename={FileNameEnum.QUIZ_RESULTS.value}"})

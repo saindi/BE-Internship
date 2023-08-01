@@ -13,6 +13,12 @@ class RoleEnum(enum.Enum):
     MEMBER = "MEMBER"
 
 
+class FileNameEnum(enum.Enum):
+    COMPANY_RESULTS = 'company_results.csv'
+    COMPANY_USER_RESULTS = 'company_user_results.csv'
+    QUIZ_RESULTS = 'quiz_results.csv'
+
+
 class RoleModel(BaseModel):
     __tablename__ = "role"
 
