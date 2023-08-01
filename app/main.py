@@ -11,6 +11,8 @@ from company.routers.crud import router as company_crud_router
 from company.routers.actions import router as company_actions_router
 from quiz.routers.quiz import router as quiz_crud_router
 from quiz.routers.question import router as question_crud_router
+from analytic.routers.user import router as analytic_user_router
+from analytic.routers.company import router as analytic_company_router
 
 
 app = FastAPI()
@@ -49,10 +51,12 @@ async def health_check():
 
 app.include_router(auth_router, tags=["Auth"])
 
-app.include_router(user_actions_router, tags=["User actions"])
 app.include_router(user_crud_router, tags=["User"])
+user_actions_router.include_router(analytic_user_router)
+app.include_router(user_actions_router, tags=["User actions"])
 
 app.include_router(company_crud_router, tags=["Company"])
+company_actions_router.include_router(analytic_company_router)
 app.include_router(company_actions_router, tags=["Company actions"])
 
 app.include_router(quiz_crud_router, tags=["Quiz"])

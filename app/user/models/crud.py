@@ -34,6 +34,10 @@ class UserCrud:
     def can_delete(self, user_id: int) -> bool:
         return self.id == user_id
 
+    def can_read(self, user_id: int) -> bool:
+        return self.id == user_id
+
+
     async def add_request_to_company(self, db: AsyncSession, company):
         for user_company in await self.companies(db):
             if user_company.id == company.id:

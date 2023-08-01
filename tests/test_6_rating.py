@@ -39,7 +39,7 @@ async def test_pass_qiuz(ac: AsyncClient, user_token: dict):
 
 
 async def test_company_rating(ac: AsyncClient, user_token: dict):
-    response = await ac.get("/user/company_rating/", headers=user_token)
+    response = await ac.get("/user/1/company_rating/", headers=user_token)
 
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 2
@@ -48,7 +48,7 @@ async def test_company_rating(ac: AsyncClient, user_token: dict):
 
 
 async def test_global_rating(ac: AsyncClient, user_token: dict):
-    response = await ac.get("/user/global_rating/", headers=user_token)
+    response = await ac.get("/user/1/global_rating/", headers=user_token)
 
     assert response.status_code == status.HTTP_200_OK
     assert round(response.json()['rating'], 3) == 0.667
