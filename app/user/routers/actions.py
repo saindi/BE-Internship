@@ -13,7 +13,7 @@ from quiz.models.models import ResultTestModel
 from analytic.models.models import AverageScoreCompanyModel, AverageScoreGlobalModel
 from quiz.schemas import ResultData
 from analytic.schemas import GlobalRatingSchema, CompanyRatingSchema
-from user.models.models import UserModel
+from user.models.models import UserModel, FileNameEnum
 from utils.generate_csv import generate_csv_data_as_result, generate_csv_data_as_results
 
 router = APIRouter(prefix='/user')
