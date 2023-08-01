@@ -1,8 +1,14 @@
+import enum
+
 from sqlalchemy import Boolean, Column, String
-from sqlalchemy.orm import relationship
 
 from db.models import BaseModel
 from user.models.crud import UserCrud
+
+
+class FileNameEnum(enum.Enum):
+    ALL_RESULTS_USER = 'all_results_user.csv'
+    TEST_RESULT = 'test_result.csv'
 
 
 class UserModel(BaseModel, UserCrud):
@@ -14,7 +20,3 @@ class UserModel(BaseModel, UserCrud):
     is_active = Column(Boolean, default=True, nullable=False)
     is_superuser = Column(Boolean, default=False, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
-
-    companies = relationship("CompanyModel", secondary="role", lazy="subquery")
-    invitations = relationship("InvitationModel", lazy="subquery", cascade="all, delete-orphan")
-    requests = relationship("RequestModel", lazy="subquery", cascade="all, delete-orphan")

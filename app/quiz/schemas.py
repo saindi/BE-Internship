@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 
-from pydantic import BaseModel, field_validator, Field
+from pydantic import BaseModel, field_validator, conint
 from pydantic_settings import SettingsConfigDict
 
 
@@ -34,7 +34,7 @@ class QuizSchema(BaseModel):
     id: int
     name: str
     description: str
-    count_day: int
+    count_day: conint(gt=0)
     id_company: int
     created_at: datetime
     updated_at: datetime
@@ -49,7 +49,7 @@ class QuizWithQuestion(QuizSchema):
 class QuizUpdate(BaseModel):
     name: str
     description: str
-    count_day: int
+    count_day: conint(gt=0)
 
 
 class AnswerData(BaseModel):
@@ -72,7 +72,7 @@ class QuestionData(BaseModel):
 class QuizData(BaseModel):
     name: str
     description: str
-    count_day: int
+    count_day: conint(gt=0)
 
     questions: List[QuestionData]
 
@@ -142,7 +142,7 @@ class ResultData(BaseModel):
     id_user: int
     id_company: int
     id_quiz: int
-    created_at: str = Field(alias="created_at", format="%Y-%m-%d %H:%M:%S.%f%z")
+    created_at: str
 
     questions: List[ResultQuestion]
 

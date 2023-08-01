@@ -13,6 +13,12 @@ class RoleEnum(enum.Enum):
     MEMBER = "MEMBER"
 
 
+class FileNameEnum(enum.Enum):
+    COMPANY_RESULTS = 'company_results.csv'
+    COMPANY_USER_RESULTS = 'company_user_results.csv'
+    QUIZ_RESULTS = 'quiz_results.csv'
+
+
 class RoleModel(BaseModel):
     __tablename__ = "role"
 
@@ -29,7 +35,7 @@ class CompanyModel(BaseModel, CompanyCrud):
     is_hidden = Column(Boolean, default=False, nullable=False)
 
     users = relationship("UserModel", secondary="role", lazy="subquery")
-    roles = relationship("RoleModel", lazy="subquery", cascade="all, delete-orphan")
+    roles = relationship("RoleModel", lazy="subquery", cascade="all, delete-orphan", overlaps="users")
     invitations = relationship("InvitationModel", lazy="subquery", cascade="all, delete-orphan")
     requests = relationship("RequestModel", lazy="subquery", cascade="all, delete-orphan")
     quizzes = relationship("QuizModel", cascade="all, delete-orphan", back_populates="company", lazy="subquery")
@@ -39,11 +45,11 @@ class InvitationModel(BaseModel):
     __tablename__ = "invitation"
 
     id_company = Column(Integer, ForeignKey("company.id"), nullable=False)
-    id_user = Column(Integer, ForeignKey("user.id"), nullable=False)
+    id_user = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
 
 
 class RequestModel(BaseModel):
     __tablename__ = "request"
 
     id_company = Column(Integer, ForeignKey("company.id"), nullable=False)
-    id_user = Column(Integer, ForeignKey("user.id"), nullable=False)
+    id_user = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)

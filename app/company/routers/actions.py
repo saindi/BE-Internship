@@ -2,14 +2,17 @@ from typing import List
 
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import StreamingResponse
 
 from auth.auth import jwt_bearer
 from company.schemas import InvitationSchema, RequestSchema, RoleSchema
 from db.database import get_async_session
-from company.models.models import CompanyModel, InvitationModel, RequestModel, RoleModel, RoleEnum
-from quiz.schemas import QuizSchema
+from company.models.models import CompanyModel, InvitationModel, RequestModel, RoleModel, RoleEnum, FileNameEnum
+from db.redis_actions import get_values_by_keys
+from quiz.schemas import QuizSchema, ResultData
 from user.models.models import UserModel
 from user.schemas import UserSchema
+from utils.generate_csv import generate_csv_data_as_results
 
 router = APIRouter(prefix='/company')
 
@@ -228,3 +231,136 @@ async def get_quizzes(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
 
     return company.quizzes[skip:limit]
+
+
+@router.get("/{company_id}/results/", response_model=List[ResultData])
+async def get_results(
+        company_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    company = await CompanyModel.get_by_id(db, company_id)
+
+    if not company.user_entitled_quiz(user.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
+
+    results = await get_values_by_keys(id_company=company_id)
+
+    if not results:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
+
+    return results[skip:limit]
+
+
+@router.get("/{company_id}/results/csv/")
+async def get_results_csv(
+        company_id: int,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    company = await CompanyModel.get_by_id(db, company_id)
+
+    if not company.user_entitled_quiz(user.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
+
+    results = await get_values_by_keys(id_company=company_id)
+
+    if not results:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
+
+    csv = generate_csv_data_as_results([ResultData.model_validate(result).model_dump() for result in results])
+
+    return StreamingResponse(csv, media_type="multipart/form-data",
+                             headers={"Content-Disposition": f"attachment; filename={FileNameEnum.COMPANY_RESULTS.value}"})
+
+
+@router.get("/{company_id}/results_user/{user_id}/", response_model=List[ResultData])
+async def get_user_results(
+        company_id: int,
+        user_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    company = await CompanyModel.get_by_id(db, company_id)
+
+    if not company.is_user_in_company(user.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
+
+    results = await get_values_by_keys(id_user=user_id, id_company=company_id)
+
+    if not results:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
+
+    return results[skip:limit]
+
+
+@router.get("/{company_id}/results_user/{user_id}/csv/")
+async def get_user_results_csv(
+        company_id: int,
+        user_id: int,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    company = await CompanyModel.get_by_id(db, company_id)
+
+    if not company.is_user_in_company(user.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
+
+    results = await get_values_by_keys(id_user=user_id, id_company=company_id)
+
+    if not results:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
+
+    csv = generate_csv_data_as_results([ResultData.model_validate(result).model_dump() for result in results])
+
+    return StreamingResponse(csv, media_type="multipart/form-data",
+                             headers={"Content-Disposition": f"attachment; filename={FileNameEnum.COMPANY_USER_RESULTS.value}"})
+
+
+@router.get("/{company_id}/results_quiz/{quiz_id}/", response_model=List[ResultData])
+async def get_results_quiz(
+        company_id: int,
+        quiz_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    company = await CompanyModel.get_by_id(db, company_id)
+
+    if not company.is_user_in_company(user.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
+
+    results = await get_values_by_keys(id_company=company_id, id_quiz=quiz_id)
+
+    if not results:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
+
+    return results[skip:limit]
+
+
+@router.get("/{company_id}/results_quiz/{quiz_id}/csv/")
+async def get_results_quiz_csv(
+        company_id: int,
+        quiz_id: int,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    company = await CompanyModel.get_by_id(db, company_id)
+
+    if not company.is_user_in_company(user.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
+
+    results = await get_values_by_keys(id_company=company_id, id_quiz=quiz_id)
+
+    if not results:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
+
+    csv = generate_csv_data_as_results([ResultData.model_validate(result).model_dump() for result in results])
+
+    return StreamingResponse(csv, media_type="multipart/form-data",
+                             headers={"Content-Disposition": f"attachment; filename={FileNameEnum.QUIZ_RESULTS.value}"})

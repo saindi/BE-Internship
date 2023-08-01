@@ -2,22 +2,29 @@ from typing import List
 
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.responses import StreamingResponse
 
 from auth.auth import jwt_bearer
 from company.models.models import CompanyModel, RequestModel, RoleModel, InvitationModel, RoleEnum
 from company.schemas import RequestSchema, InvitationSchema, RoleSchema, CompanySchema
 from db.database import get_async_session
-from db.redis import get_data_from_redis
+from db.redis_actions import get_values_by_keys, get_value_by_keys
 from quiz.models.models import AverageScoreGlobalModel, AverageScoreCompanyModel, ResultTestModel
-from quiz.schemas import CompanyRatingSchema, GlobalRatingSchema, ResultTestSchema, ResultData
-from user.models.models import UserModel
+from quiz.schemas import CompanyRatingSchema, GlobalRatingSchema, ResultData
+from user.models.models import UserModel, FileNameEnum
+from utils.generate_csv import generate_csv_data_as_result, generate_csv_data_as_results
 
 router = APIRouter(prefix='/user')
 
 
 @router.get("/companies/", response_model=List[CompanySchema])
-async def get_requests(skip: int = 0, limit: int = 100, user: UserModel = Depends(jwt_bearer)):
-    return user.companies[skip:limit]
+async def get_requests(
+        skip: int = 0,
+        limit: int = 100,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    return (await user.companies(db))[skip:limit]
 
 
 @router.get("/company/{company_id}/exit/", response_model=List[CompanySchema])
@@ -39,8 +46,8 @@ async def exit_from_company(
 
 
 @router.get("/requests/", response_model=List[RequestSchema])
-async def get_requests(user: UserModel = Depends(jwt_bearer)):
-    return user.requests
+async def get_requests(user: UserModel = Depends(jwt_bearer), db: AsyncSession = Depends(get_async_session)):
+    return await user.requests(db)
 
 
 @router.post("/request/", response_model=RequestSchema, status_code=status.HTTP_201_CREATED)
@@ -71,8 +78,8 @@ async def delete_invitation(
 
 
 @router.get("/invitations/", response_model=List[InvitationSchema])
-async def get_invitations(user: UserModel = Depends(jwt_bearer)):
-    return user.invitations
+async def get_invitations(user: UserModel = Depends(jwt_bearer), db: AsyncSession = Depends(get_async_session)):
+    return await user.invitations(db)
 
 
 @router.get("/invitation/{invite_id}/accept/", response_model=RoleSchema)
@@ -107,19 +114,31 @@ async def reject_invitation(
     return await invite.delete(db)
 
 
-@router.get("/test_results/", response_model=List[ResultTestSchema])
+@router.get("/test_results/", response_model=List[ResultData])
 async def get_results(
         skip: int = 0,
         limit: int = 100,
-        user: UserModel = Depends(jwt_bearer),
-        db: AsyncSession = Depends(get_async_session)
+        user: UserModel = Depends(jwt_bearer)
 ):
-    results = await ResultTestModel.get_by_fields(db, return_single=False, id_user=user.id, skip=skip, limit=limit)
+    results = await get_values_by_keys(id_user=user.id)
 
     if not results:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
 
-    return results
+    return results[skip:limit]
+
+
+@router.get("/test_results/csv/")
+async def get_results_csv(user: UserModel = Depends(jwt_bearer)):
+    results = await get_values_by_keys(id_user=user.id)
+
+    if not results:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
+
+    csv = generate_csv_data_as_results([ResultData.model_validate(result).model_dump() for result in results])
+
+    return StreamingResponse(csv, media_type="multipart/form-data",
+                             headers={"Content-Disposition": f"attachment; filename={FileNameEnum.ALL_RESULTS_USER.value}"})
 
 
 @router.get("/test_result/{result_test_id}/", response_model=ResultData)
@@ -128,17 +147,37 @@ async def get_result_by_id(
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
-    result_from_redis = await get_data_from_redis('result_test', result_test_id)
+    result_from_redis = await get_value_by_keys(result_test=result_test_id, id_user=user.id)
 
     if result_from_redis:
         return result_from_redis
 
     result = await ResultTestModel.get_by_fields(db, id_user=user.id, id=result_test_id)
 
-    if result is None:
+    if not result:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Result not found")
 
     return result
+
+
+@router.get("/test_result/{result_test_id}/csv/")
+async def get_result_csv(
+        result_test_id: int,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    result_from_redis = await get_value_by_keys(id_user=user.id, result_test=result_test_id)
+
+    if not result_from_redis:
+        result = await ResultTestModel.get_by_fields(db, id_user=user.id, id=result_test_id)
+
+        if not result:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Result not found")
+
+    csv = generate_csv_data_as_result(ResultData.model_validate(result).model_dump())
+
+    return StreamingResponse(csv, media_type="multipart/form-data",
+                             headers={"Content-Disposition": f"attachment; filename={FileNameEnum.TEST_RESULT.value}"})
 
 
 @router.get("/global_rating/", response_model=GlobalRatingSchema)
