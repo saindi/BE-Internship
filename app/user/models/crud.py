@@ -68,9 +68,14 @@ class NotificationCrud:
 
     @staticmethod
     async def delete_read(db: AsyncSession, user_id: int):
-        from user.models.models import NotificationModel
+        from user.models.models import NotificationModel, StatusEnum
 
-        notifications = await NotificationModel.get_by_fields(db, return_single=False, id_user=user_id)
+        notifications = await NotificationModel.get_by_fields(
+            db,
+            return_single=False,
+            id_user=user_id,
+            status=StatusEnum.READ.value
+        )
 
         if notifications:
             [(await notification.delete(db)) for notification in notifications]
