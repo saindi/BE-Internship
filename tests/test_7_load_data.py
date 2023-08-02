@@ -4,14 +4,14 @@ from fastapi import status
 
 
 async def test_user_get_results(ac: AsyncClient, user_token: dict):
-    response = await ac.get("/user/test_results/", headers=user_token)
+    response = await ac.get("/user/1/test_results/", headers=user_token)
 
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 3
 
 
 async def test_user_get_result_by_id(ac: AsyncClient, user_token: dict):
-    response = await ac.get("/user/test_result/1/", headers=user_token)
+    response = await ac.get("/user/1/test_result/1/", headers=user_token)
 
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()['questions']) == 2

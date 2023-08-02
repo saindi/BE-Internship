@@ -103,14 +103,6 @@ class ResultTestSchema(IdWithUser):
     model_config = SettingsConfigDict(from_attributes=True)
 
 
-class GlobalRatingSchema(IdWithUser):
-    rating: float
-
-
-class CompanyRatingSchema(GlobalRatingSchema):
-    id_company: int
-
-
 class UserAnswer(BaseModel):
     answer: str
 

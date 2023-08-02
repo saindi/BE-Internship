@@ -30,6 +30,12 @@ class CompanyCrud:
 
         return False
 
+    def is_user_manager(self, current_user_id: int) -> bool:
+        if self.is_owner(current_user_id) or current_user_id in self.get_id_admins():
+            return True
+
+        return False
+
     def is_owner(self, current_user_id: int) -> bool:
         return self.get_owner_id() == current_user_id
 

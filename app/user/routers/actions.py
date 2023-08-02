@@ -9,32 +9,42 @@ from company.models.models import CompanyModel, RequestModel, RoleModel, Invitat
 from company.schemas import RequestSchema, InvitationSchema, RoleSchema, CompanySchema
 from db.database import get_async_session
 from db.redis_actions import get_values_by_keys, get_value_by_keys
-from quiz.models.models import AverageScoreGlobalModel, AverageScoreCompanyModel, ResultTestModel
-from quiz.schemas import CompanyRatingSchema, GlobalRatingSchema, ResultData
+from quiz.models.models import ResultTestModel
+from analytic.models.models import AverageScoreCompanyModel, AverageScoreGlobalModel
+from quiz.schemas import ResultData
+from analytic.schemas import GlobalRatingSchema, CompanyRatingSchema
 from user.models.models import UserModel, FileNameEnum
 from utils.generate_csv import generate_csv_data_as_result, generate_csv_data_as_results
 
 router = APIRouter(prefix='/user')
 
 
-@router.get("/companies/", response_model=List[CompanySchema])
+@router.get("/{user_id}/companies/", response_model=List[CompanySchema])
 async def get_requests(
+        user_id: int,
         skip: int = 0,
         limit: int = 100,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
+    if not user.can_read(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
+
     return (await user.companies(db))[skip:limit]
 
 
-@router.get("/company/{company_id}/exit/", response_model=List[CompanySchema])
+@router.get("/{user_id}/company/{company_id}/exit/", response_model=List[CompanySchema])
 async def exit_from_company(
+        user_id: int,
         company_id: int,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
+    if not user.can_delete(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
+
     company = await CompanyModel.get_by_id(db, company_id)
-    role = await RoleModel.get_by_fields(db, id_company=company.id, id_user=user.id)
+    role = await RoleModel.get_by_fields(db, id_company=company.id, id_user=user_id)
 
     if not role:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You're not a member of the company")
@@ -45,17 +55,24 @@ async def exit_from_company(
     return await role.delete(db)
 
 
-@router.get("/requests/", response_model=List[RequestSchema])
-async def get_requests(user: UserModel = Depends(jwt_bearer), db: AsyncSession = Depends(get_async_session)):
+@router.get("/{user_id}/requests/", response_model=List[RequestSchema])
+async def get_requests(user_id: int, user: UserModel = Depends(jwt_bearer), db: AsyncSession = Depends(get_async_session)):
+    if not user.can_read(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
+
     return await user.requests(db)
 
 
-@router.post("/request/", response_model=RequestSchema, status_code=status.HTTP_201_CREATED)
+@router.post("/{user_id}/request/", response_model=RequestSchema, status_code=status.HTTP_201_CREATED)
 async def create_request(
+        user_id: int,
         company_id: int,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
+    if not user.can_edit(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
+
     company = await CompanyModel.get_by_id(db, company_id)
 
     request = await user.add_request_to_company(db, company)
@@ -63,12 +80,16 @@ async def create_request(
     return request
 
 
-@router.delete("/request/{request_id}/")
+@router.delete("/{user_id}/request/{request_id}/")
 async def delete_invitation(
+        user_id: int,
         request_id: int,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
+    if not user.can_delete(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
+
     request = await RequestModel.get_by_id(db, request_id)
 
     if request.id_user != user.id:
@@ -77,18 +98,25 @@ async def delete_invitation(
     return await request.delete(db)
 
 
-@router.get("/invitations/", response_model=List[InvitationSchema])
-async def get_invitations(user: UserModel = Depends(jwt_bearer), db: AsyncSession = Depends(get_async_session)):
+@router.get("/{user_id}/invitations/", response_model=List[InvitationSchema])
+async def get_invitations(user_id: int, user: UserModel = Depends(jwt_bearer), db: AsyncSession = Depends(get_async_session)):
+    if not user.can_read(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
+
     return await user.invitations(db)
 
 
-@router.get("/invitation/{invite_id}/accept/", response_model=RoleSchema)
+@router.get("/{user_id}/invitation/{invite_id}/accept/", response_model=RoleSchema)
 async def accept_invitation(
+        user_id: int,
         invite_id: int,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
-    invite = await InvitationModel.get_by_fields(db, id_user=user.id, id=invite_id)
+    if not user.can_edit(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
+
+    invite = await InvitationModel.get_by_fields(db, id_user=user_id, id=invite_id)
 
     if not invite:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invite not found")
@@ -100,13 +128,17 @@ async def accept_invitation(
     return role
 
 
-@router.get("/invitation/{invite_id}/reject/")
+@router.get("/{user_id}/invitation/{invite_id}/reject/")
 async def reject_invitation(
+        user_id: int,
         invite_id: int,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
-    invite = await InvitationModel.get_by_fields(db, id_user=user.id, id=invite_id)
+    if not user.can_edit(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
+
+    invite = await InvitationModel.get_by_fields(db, id_user=user_id, id=invite_id)
 
     if not invite:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invite not found")
@@ -114,13 +146,17 @@ async def reject_invitation(
     return await invite.delete(db)
 
 
-@router.get("/test_results/", response_model=List[ResultData])
+@router.get("/{user_id}/test_results/", response_model=List[ResultData])
 async def get_results(
+        user_id: int,
         skip: int = 0,
         limit: int = 100,
         user: UserModel = Depends(jwt_bearer)
 ):
-    results = await get_values_by_keys(id_user=user.id)
+    if not user.can_read(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
+
+    results = await get_values_by_keys(id_user=user_id)
 
     if not results:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
@@ -128,9 +164,12 @@ async def get_results(
     return results[skip:limit]
 
 
-@router.get("/test_results/csv/")
-async def get_results_csv(user: UserModel = Depends(jwt_bearer)):
-    results = await get_values_by_keys(id_user=user.id)
+@router.get("/{user_id}/test_results/csv/")
+async def get_results_csv(user_id, user: UserModel = Depends(jwt_bearer)):
+    if not user.can_read(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
+
+    results = await get_values_by_keys(id_user=user_id)
 
     if not results:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Results not found")
@@ -141,18 +180,22 @@ async def get_results_csv(user: UserModel = Depends(jwt_bearer)):
                              headers={"Content-Disposition": f"attachment; filename={FileNameEnum.ALL_RESULTS_USER.value}"})
 
 
-@router.get("/test_result/{result_test_id}/", response_model=ResultData)
+@router.get("/{user_id}/test_result/{result_test_id}/", response_model=ResultData)
 async def get_result_by_id(
+        user_id: int,
         result_test_id: int,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
-    result_from_redis = await get_value_by_keys(result_test=result_test_id, id_user=user.id)
+    if not user.can_read(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
+
+    result_from_redis = await get_value_by_keys(result_test=result_test_id, id_user=user_id)
 
     if result_from_redis:
         return result_from_redis
 
-    result = await ResultTestModel.get_by_fields(db, id_user=user.id, id=result_test_id)
+    result = await ResultTestModel.get_by_fields(db, id_user=user_id, id=result_test_id)
 
     if not result:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Result not found")
@@ -160,16 +203,20 @@ async def get_result_by_id(
     return result
 
 
-@router.get("/test_result/{result_test_id}/csv/")
+@router.get("/{user_id}/test_result/{result_test_id}/csv/")
 async def get_result_csv(
+        user_id: int,
         result_test_id: int,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
-    result_from_redis = await get_value_by_keys(id_user=user.id, result_test=result_test_id)
+    if not user.can_read(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
+
+    result_from_redis = await get_value_by_keys(id_user=user_id, result_test=result_test_id)
 
     if not result_from_redis:
-        result = await ResultTestModel.get_by_fields(db, id_user=user.id, id=result_test_id)
+        result = await ResultTestModel.get_by_fields(db, id_user=user_id, id=result_test_id)
 
         if not result:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Result not found")
@@ -180,12 +227,16 @@ async def get_result_csv(
                              headers={"Content-Disposition": f"attachment; filename={FileNameEnum.TEST_RESULT.value}"})
 
 
-@router.get("/global_rating/", response_model=GlobalRatingSchema)
+@router.get("/{user_id}/global_rating/", response_model=GlobalRatingSchema)
 async def get_global_rating(
+        user_id: int,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
-    global_rating = await AverageScoreGlobalModel.get_by_fields(db, id_user=user.id)
+    if not user.can_read(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
+
+    global_rating = await AverageScoreGlobalModel.get_by_fields(db, id_user=user_id)
 
     if not global_rating:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You haven't taken the quizzes yet")
@@ -193,12 +244,16 @@ async def get_global_rating(
     return global_rating
 
 
-@router.get("/company_rating/", response_model=List[CompanyRatingSchema])
+@router.get("/{user_id}/company_rating/", response_model=List[CompanyRatingSchema])
 async def get_company_rating(
+        user_id: int,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
-    company_rating = await AverageScoreCompanyModel.get_by_fields(db, return_single=False, id_user=user.id)
+    if not user.can_read(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
+
+    company_rating = await AverageScoreCompanyModel.get_by_fields(db, return_single=False, id_user=user_id)
 
     if not company_rating:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You haven't taken the quizzes yet")

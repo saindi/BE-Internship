@@ -1,24 +1,8 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, Boolean, Float
+from sqlalchemy import Column, String, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
 from db.models import BaseModel
-from quiz.models.crud import QuestionCrud, QuizCrud, AverageScoreCompanyCrud, AverageScoreGlobalCrud, ResultTestCrud, \
-    ResultQuestionCrud
-
-
-class AverageScoreCompanyModel(BaseModel, AverageScoreCompanyCrud):
-    __tablename__ = "average_score_company"
-
-    id_user = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
-    id_company = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=False)
-    rating = Column(Float, nullable=False)
-
-
-class AverageScoreGlobalModel(BaseModel, AverageScoreGlobalCrud):
-    __tablename__ = "average_score_global"
-
-    id_user = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, unique=True)
-    rating = Column(Float, nullable=False)
+from quiz.models.crud import QuestionCrud, QuizCrud, ResultTestCrud, ResultQuestionCrud
 
 
 class AnswerModel(BaseModel):

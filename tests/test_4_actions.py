@@ -6,11 +6,11 @@ from fastapi import status
 
 @pytest.mark.parametrize('user_token', ('3'), indirect=True)
 async def test_request(ac: AsyncClient, user_token: dict):
-    response_1 = await ac.post("/user/request/", params={
+    response_1 = await ac.post("/user/3/request/", params={
         "company_id": 1,
     }, headers=user_token)
 
-    response_2 = await ac.post("/user/request/", params={
+    response_2 = await ac.post("/user/3/request/", params={
         "company_id": 3,
     }, headers=user_token)
 
@@ -23,14 +23,14 @@ async def test_request(ac: AsyncClient, user_token: dict):
 @pytest.mark.parametrize('user_token', ('3'), indirect=True)
 async def test_requests_user(ac: AsyncClient, user_token: dict):
 
-    response_1 = await ac.get("/user/requests/", headers=user_token)
+    response_1 = await ac.get("/user/3/requests/", headers=user_token)
 
     assert len(response_1.json()) == 2
 
 
 @pytest.mark.parametrize('user_token', ('3'), indirect=True)
 async def test_request_bad_id(ac: AsyncClient, user_token: dict):
-    response_1 = await ac.post("/user/request/", params={
+    response_1 = await ac.post("/user/3/request/", params={
         "company_id": 100,
     }, headers=user_token)
 
@@ -39,7 +39,7 @@ async def test_request_bad_id(ac: AsyncClient, user_token: dict):
 
 @pytest.mark.parametrize('user_token', ('3'), indirect=True)
 async def test_request_already(ac: AsyncClient, user_token: dict):
-    response_1 = await ac.post("/user/request/", params={
+    response_1 = await ac.post("/user/3/request/", params={
         "company_id": 1,
     }, headers=user_token)
 
@@ -49,14 +49,14 @@ async def test_request_already(ac: AsyncClient, user_token: dict):
 
 @pytest.mark.parametrize('user_token', ('3'), indirect=True)
 async def test_request_delete(ac: AsyncClient, user_token: dict):
-    response = await ac.delete("/user/request/2/", headers=user_token)
+    response = await ac.delete("/user/3/request/2/", headers=user_token)
 
     assert response.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.parametrize('user_token', ('3'), indirect=True)
 async def test_request_delete_bad(ac: AsyncClient, user_token: dict):
-    response = await ac.delete("/user/request/2/", headers=user_token)
+    response = await ac.delete("/user/3/request/2/", headers=user_token)
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -77,14 +77,14 @@ async def test_invite(ac: AsyncClient, user_token: dict):
 
 @pytest.mark.parametrize('user_token', ('2'), indirect=True)
 async def test_invite_accept(ac: AsyncClient, user_token: dict):
-    response = await ac.get("/user/invitation/1/accept/", headers=user_token)
+    response = await ac.get("/user/2/invitation/1/accept/", headers=user_token)
 
     assert response.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.parametrize('user_token', ('4'), indirect=True)
 async def test_invite_reject(ac: AsyncClient,  user_token: dict):
-    response = await ac.get("/user/invitation/2/reject/", headers=user_token)
+    response = await ac.get("/user/4/invitation/2/reject/", headers=user_token)
 
     assert response.status_code == status.HTTP_200_OK
 
