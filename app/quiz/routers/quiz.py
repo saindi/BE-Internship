@@ -14,7 +14,7 @@ from quiz.schemas import (
     ResultTestSchema
 )
 from quiz.models.models import QuizModel
-from user.models.models import UserModel
+from user.models.models import UserModel, NotificationModel
 
 router = APIRouter(prefix='/quiz')
 
@@ -44,6 +44,8 @@ async def create_quiz(
     quiz = QuizModel(name=data.name, description=data.description, count_day=data.count_day, id_company=company.id)
 
     await quiz.create_with_questions(db, data)
+
+    await NotificationModel.notification_for_users(db, company.users, f"Company {company.name} create new quiz {quiz.name}!")
 
     return quiz
 
