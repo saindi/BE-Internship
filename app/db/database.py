@@ -1,4 +1,4 @@
-from sqlalchemy import MetaData
+from sqlalchemy import MetaData, create_engine
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
@@ -7,7 +7,7 @@ from config import global_settings
 
 engine = create_async_engine(
     global_settings.postgresql_url,
-    echo=True,
+    echo=False,
     future=True
 )
 
@@ -23,3 +23,10 @@ class Base(DeclarativeBase):
 async def get_async_session() -> AsyncSession:
     async with async_session() as session:
         yield session
+
+
+def get_sync_session():
+    engine_sync = create_engine(global_settings.postgresql_sync_url, echo=False)
+    session_sync = sessionmaker(bind=engine_sync)
+
+    return session_sync()

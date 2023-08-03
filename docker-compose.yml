@@ -46,6 +46,40 @@ services:
     networks:
       - my-network
 
+  celery-worker:
+    build:
+      context: .
+    env_file:
+      - .env
+    container_name: celery-worker
+    command: [ "./celery.sh", "celery_worker" ]
+    depends_on:
+      - redis
+
+  celery-beat:
+    build:
+      context: .
+    env_file:
+      - .env
+    container_name: celery-beat
+    command: [ "./celery.sh", "celery_beat" ]
+    depends_on:
+      - redis
+
+  flower:
+    build:
+      context: .
+    env_file:
+      - .env
+    container_name: flower
+    command: [ "./celery.sh", "flower" ]
+    depends_on:
+      - redis
+      - celery-worker
+      - celery-beat
+    ports:
+      - 5555:5555
+
 networks:
   my-network:
     driver: "bridge"

@@ -13,6 +13,7 @@ from quiz.schemas import QuizSchema, ResultData
 from user.models.models import UserModel
 from user.schemas import UserSchema
 from utils.generate_csv import generate_csv_data_as_results
+from analytic.routers.company import router as company_analytic_router
 
 router = APIRouter(prefix='/company')
 
@@ -364,3 +365,6 @@ async def get_results_quiz_csv(
 
     return StreamingResponse(csv, media_type="multipart/form-data",
                              headers={"Content-Disposition": f"attachment; filename={FileNameEnum.QUIZ_RESULTS.value}"})
+
+
+router.include_router(company_analytic_router)

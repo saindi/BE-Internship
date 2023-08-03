@@ -81,5 +81,5 @@ class NotificationCrud:
             [(await notification.delete(db)) for notification in notifications]
 
             return {'detail': f'Success delete notifications'}
-        else:
-            return {'detail': f'No such read notifications'}
+
+        return {'detail': f'No such read notifications'}
