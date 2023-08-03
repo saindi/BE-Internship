@@ -13,7 +13,8 @@ from quiz.models.models import ResultTestModel
 from analytic.models.models import AverageScoreCompanyModel, AverageScoreGlobalModel
 from quiz.schemas import ResultData
 from analytic.schemas import GlobalRatingSchema, CompanyRatingSchema
-from user.models.models import UserModel, FileNameEnum
+from user.models.models import UserModel, FileNameEnum, NotificationModel, StatusEnum
+from user.schemas import NotificationSchema
 from utils.generate_csv import generate_csv_data_as_result, generate_csv_data_as_results
 
 router = APIRouter(prefix='/user')
@@ -259,3 +260,49 @@ async def get_company_rating(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You haven't taken the quizzes yet")
 
     return company_rating
+
+
+@router.get("/{user_id}/notifications/", response_model=List[NotificationSchema])
+async def get_notifications(
+        user_id: int,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    if not user.can_read(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
+
+    notifications = await NotificationModel.get_by_fields(db, return_single=False, id_user=user_id)
+
+    return notifications
+
+
+@router.delete("/{user_id}/notifications/delete_read/")
+async def delete_read_notifications(
+        user_id: int,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    if not user.can_read(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
+
+    return await NotificationModel.delete_read(db, user.id)
+
+
+@router.put("/{user_id}/notification/{notification_id}/mark_read/", response_model=NotificationSchema)
+async def mark_read_notification(
+        user_id: int,
+        notification_id: int,
+        user: UserModel = Depends(jwt_bearer),
+        db: AsyncSession = Depends(get_async_session)
+):
+    if not user.can_read(user_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
+
+    notification = await NotificationModel.get_by_fields(db, id_user=user_id, id=notification_id)
+
+    if not notification:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Notification not found")
+
+    await notification.update(db, {'status': StatusEnum.READ.value})
+
+    return notification

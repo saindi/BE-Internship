@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from auth.auth import jwt_bearer
 from company.models.models import RoleModel, RoleEnum
 from db.database import get_async_session
-from user.schemas import UserSchema, UserCreateRequest, UserUpdateRequest, UserNewData
+from user.schemas import UserSchema, UserCreateRequest, UserUpdateRequest, UserCreateData
 from user.models.models import UserModel
 from utils.hashing import Hasher
 
@@ -52,7 +52,7 @@ async def update_user(
     if not user.can_edit(affected_user.id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='This user cannot change the data')
 
-    await affected_user.update(db, UserNewData(data))
+    await affected_user.update(db, UserCreateData(data))
 
     return user
 
@@ -65,7 +65,7 @@ async def delete_user(
 ):
     affected_user = await UserModel.get_by_id(db, user_id)
 
-    roles = await RoleModel.get_by_fields(db, False, id_user=affected_user.id, role=RoleEnum.OWNER)
+    roles = await RoleModel.get_by_fields(db, False, id_user=affected_user.id, role=RoleEnum.OWNER.value)
 
     if roles:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='First, delete the companies where you are the creator.')

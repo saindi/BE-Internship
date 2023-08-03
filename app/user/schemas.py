@@ -4,6 +4,7 @@ from pydantic_core.core_schema import FieldValidationInfo
 from pydantic import BaseModel, EmailStr, field_validator
 from pydantic_settings import SettingsConfigDict
 
+from user.models.models import StatusEnum
 from utils.hashing import Hasher
 
 
@@ -41,7 +42,7 @@ class UserUpdateRequest(UserNewData):
     pass
 
 
-class UserNewData:
+class UserCreateData:
     username: str
     hashed_password: str
 
@@ -51,3 +52,14 @@ class UserNewData:
 
     def __iter__(self):
         return iter(vars(self).items())
+
+
+class NotificationSchema(BaseModel):
+    id: int
+    id_user: int
+    text: str
+    status: StatusEnum
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = SettingsConfigDict(from_attributes=True)

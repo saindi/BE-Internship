@@ -37,7 +37,6 @@ class UserCrud:
     def can_read(self, user_id: int) -> bool:
         return self.id == user_id
 
-
     async def add_request_to_company(self, db: AsyncSession, company):
         for user_company in await self.companies(db):
             if user_company.id == company.id:
@@ -58,3 +57,29 @@ class UserCrud:
         await new_request.create(db)
 
         return new_request
+
+
+class NotificationCrud:
+    @staticmethod
+    async def notification_for_users(db: AsyncSession, users, msg: str):
+        from user.models.models import NotificationModel
+
+        [(await NotificationModel(id_user=user.id, text=msg).create(db)) for user in users]
+
+    @staticmethod
+    async def delete_read(db: AsyncSession, user_id: int):
+        from user.models.models import NotificationModel, StatusEnum
+
+        notifications = await NotificationModel.get_by_fields(
+            db,
+            return_single=False,
+            id_user=user_id,
+            status=StatusEnum.READ.value
+        )
+
+        if notifications:
+            [(await notification.delete(db)) for notification in notifications]
+
+            return {'detail': f'Success delete notifications'}
+        else:
+            return {'detail': f'No such read notifications'}
