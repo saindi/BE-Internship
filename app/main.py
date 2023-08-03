@@ -4,6 +4,7 @@ import uvicorn
 
 from log import logger
 from config import global_settings
+from tasks import apscheduler_task
 from user.routers.crud import router as user_crud_router
 from user.routers.actions import router as user_actions_router
 from auth.router import router as auth_router
@@ -31,6 +32,8 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_event():
     logger.info("App startup...")
+
+    apscheduler_task.scheduler.start()
 
 
 @app.on_event("shutdown")

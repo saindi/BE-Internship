@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import Depends, status, HTTPException
+from fastapi import Depends, status, HTTPException, APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from analytic.models.models import AverageScoreGlobalModel
@@ -11,7 +11,8 @@ from quiz.models.models import ResultTestModel
 from quiz.schemas import ResultTestSchema
 from user.models.models import UserModel
 from utils.analytic import avarage_quiz_score_by_time, user_last_pass_quizzes
-from user.routers.actions import router
+
+router = APIRouter(tags=['User analytic'])
 
 
 @router.get("/{user_id}/global_rating_analytic/", response_model=GlobalRatingSchema, dependencies=[Depends(jwt_bearer)])

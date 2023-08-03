@@ -7,3 +7,5 @@ WORKDIR /fastapi_app
 COPY . .
 
 RUN pip install -r requirements.txt
+
+RUN chmod a+x *.sh

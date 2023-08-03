@@ -30,11 +30,21 @@ class Settings(BaseSettings):
     auth0_issuer: str
     auth0_algorithms: str
 
+    smtp_host: str
+    smtp_port: str
+    smtp_user: str
+    smtp_password: str
+
     model_config = SettingsConfigDict(env_file=find_dotenv())
 
     @property
     def postgresql_url(self) -> str:
         return f"postgresql+asyncpg://{self.db_username}:{self.db_password}@{self.db_host}:" \
+               f"{self.db_port}/{self.db_database}"
+
+    @property
+    def postgresql_sync_url(self) -> str:
+        return f"postgresql://{self.db_username}:{self.db_password}@{self.db_host}:" \
                f"{self.db_port}/{self.db_database}"
 
     @property
