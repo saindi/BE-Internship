@@ -58,7 +58,7 @@ def check_for_need_pass_quizzes_users():
 
 celery.conf.beat_schedule = {
     'check_last_pass_quiz': {
-        'task': 'celery_tasks.tasks.check_for_need_pass_quizzes_users',
-        'schedule': crontab(hour=0, minute=0),
+        'task': 'tasks.celery_tasks.check_for_need_pass_quizzes_users',
+        'schedule': crontab(hour=19, minute=19),
     }
 }
