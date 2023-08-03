@@ -37,4 +37,4 @@ def send_ad_email_task():
 
 
 scheduler = BackgroundScheduler()
-scheduler.add_job(send_ad_email_task, 'cron', hour=19, minute=19)
+scheduler.add_job(send_ad_email_task, 'cron', hour=0, minute=0)
