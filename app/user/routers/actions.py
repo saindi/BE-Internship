@@ -16,9 +16,9 @@ from analytic.schemas import GlobalRatingSchema, CompanyRatingSchema
 from user.models.models import UserModel, FileNameEnum, NotificationModel, StatusEnum
 from user.schemas import NotificationSchema
 from utils.generate_csv import generate_csv_data_as_result, generate_csv_data_as_results
+from analytic.routers.user import router as user_analytic_router
 
 router = APIRouter(prefix='/user')
-
 
 @router.get("/{user_id}/companies/", response_model=List[CompanySchema])
 async def get_requests(
@@ -306,3 +306,6 @@ async def mark_read_notification(
     await notification.update(db, {'status': StatusEnum.READ.value})
 
     return notification
+
+
+router.include_router(user_analytic_router)
