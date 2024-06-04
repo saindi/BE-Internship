@@ -6,5 +6,13 @@ class LoginSchema(BaseModel):
     password: str
 
 
-class TokenSchema(BaseModel):
+class AccessTokenSchema(BaseModel):
     access_token: str
+
+
+class RefreshTokenSchema(BaseModel):
+    refresh_token: str
+
+
+class TokenSchema(AccessTokenSchema, RefreshTokenSchema):
+    pass

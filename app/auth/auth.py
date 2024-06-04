@@ -20,16 +20,16 @@ class JWTBearer(HTTPBearer):
         credentials: HTTPAuthorizationCredentials = await super(JWTBearer, self).__call__(request)
         if credentials:
             if not credentials.scheme == "Bearer":
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid authentication scheme.")
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication scheme.")
 
             user = await self.verify(credentials.credentials)
 
             if not user:
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token or expired token.")
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token or expired token.")
 
             return user
         else:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid authorization code.")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authorization code.")
 
     async def verify(self, token: str) -> Optional[UserModel]:
         result_jwt = await self.verify_jwt(token)
@@ -82,14 +82,37 @@ class JWTBearer(HTTPBearer):
 
     @staticmethod
     def sign_jwt(email: str) -> TokenSchema:
-        payload = {
+        access_payload = {
             "email": email,
-            "expires": time.time() + 60 * 60 * 24
+            "expires": time.time() + 60 * 60 * 24  # 1 day
+        }
+        refresh_payload = {
+            "email": email,
+            "expires": time.time() + 60 * 60 * 24 * 30  # 30 days
         }
 
-        token = jwt.encode(payload, global_settings.jwt_secret, algorithm=global_settings.jwt_algorithm)
+        access_token = jwt.encode(access_payload, global_settings.jwt_secret, algorithm=global_settings.jwt_algorithm)
+        refresh_token = jwt.encode(refresh_payload, global_settings.jwt_secret, algorithm=global_settings.jwt_algorithm)
 
-        return TokenSchema(access_token=token)
+        return TokenSchema(access_token=access_token, refresh_token=refresh_token)
+
+    @staticmethod
+    def verify_refresh_token(token: str) -> Optional[str]:
+        try:
+            decoded_token = jwt.decode(token, global_settings.jwt_secret, algorithms=global_settings.jwt_algorithm)
+            if decoded_token["expires"] >= time.time():
+                new_access_token = jwt.encode(
+                    {"email": decoded_token["email"], "expires": time.time() + 60 * 60 * 24},
+                    global_settings.jwt_secret,
+                    algorithm=global_settings.jwt_algorithm
+                )
+                return new_access_token
+            else:
+                return None
+        except jwt.exceptions.DecodeError:
+            return None
+        except jwt.exceptions.InvalidAlgorithmError:
+            return None
 
     @staticmethod
     def decode_jwt(token: str) -> Optional[dict]:
