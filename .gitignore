@@ -1,4 +1,8 @@
 .idea
 venv
+env
 .env
 .pytest_cache
+app/celerybeat-schedule.bak
+app/celerybeat-schedule.dat
+app/celerybeat-schedule.dir
