@@ -100,3 +100,9 @@ or perform the most recent audit:
 ```
 alembic upgrade head
 ```
+
+and you can create your migration:
+
+```
+alembic revision --autogenerate -m "[your name]"
+```

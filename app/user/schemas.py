@@ -1,4 +1,6 @@
+from base64 import b64encode
 from datetime import datetime
+from typing import Optional
 
 from pydantic_core.core_schema import FieldValidationInfo
 from pydantic import BaseModel, EmailStr, field_validator
@@ -15,6 +17,7 @@ class UserSchema(BaseModel):
     hashed_password: str
     created_at: datetime
     updated_at: datetime
+    avatar: Optional[str] = None
     is_active: bool = True
     is_superuser: bool = False
     is_verified: bool = False
