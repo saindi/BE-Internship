@@ -25,6 +25,11 @@ class UserSchema(BaseModel):
     model_config = SettingsConfigDict(from_attributes=True)
 
 
+class UsersResponse(BaseModel):
+    data: list[UserSchema]
+    count_pages: int
+
+
 class UserNewData(BaseModel):
     username: str
     password: str

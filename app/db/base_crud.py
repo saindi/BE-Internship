@@ -2,7 +2,7 @@ from typing import Type, List, TypeVar, Dict
 import re
 
 from fastapi import status, HTTPException
-from sqlalchemy import and_, select
+from sqlalchemy import and_, select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
@@ -21,6 +21,14 @@ class BaseCRUD(Base):
         instances = result.scalars().all()
 
         return instances
+
+    @classmethod
+    async def count_all(cls: Type[TBase], db: AsyncSession) -> int:
+        count_query = select(func.count()).select_from(cls)
+        result = await db.execute(count_query)
+        count = result.scalar()
+
+        return count
 
     @classmethod
     async def get_by_id(cls: Type[TBase], db: AsyncSession, obj_id: int) -> TBase:

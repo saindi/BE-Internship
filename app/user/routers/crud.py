@@ -1,3 +1,4 @@
+import math
 from typing import List
 
 from fastapi import APIRouter, Depends, status, HTTPException
@@ -6,18 +7,24 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from auth.auth import jwt_bearer
 from company.models.models import RoleModel, RoleEnum
 from db.database import get_async_session
-from user.schemas import UserSchema, UserCreateRequest, UserUpdateRequest, UserCreateData
+from user.schemas import UserSchema, UserCreateRequest, UserUpdateRequest, UserCreateData, UsersResponse
 from user.models.models import UserModel
 from utils.hashing import Hasher
 
 router = APIRouter(prefix='/user')
 
 
-@router.get("/", response_model=List[UserSchema], dependencies=[Depends(jwt_bearer)])
+@router.get("/", response_model=UsersResponse, dependencies=[Depends(jwt_bearer)])
 async def get_users(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_async_session)):
     users = await UserModel.get_all(db, skip, limit)
 
-    return users
+    count_users = await UserModel.count_all(db)
+    count_pages = math.ceil(count_users / limit)
+
+    return UsersResponse(
+        data=users,
+        count_pages=count_pages,
+    )
 
 
 @router.get("/{user_id}/", response_model=UserSchema, dependencies=[Depends(jwt_bearer)])
