@@ -1,10 +1,11 @@
+import math
 from typing import List
 
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.auth import jwt_bearer
-from company.schemas import CompanySchema, CompanyCreateRequest, CompanyUpdateRequest
+from company.schemas import CompanySchema, CompanyCreateRequest, CompanyUpdateRequest, CompanyResponse
 from db.database import get_async_session
 from company.models.models import CompanyModel
 from user.models.models import UserModel
@@ -12,14 +13,20 @@ from user.models.models import UserModel
 router = APIRouter(prefix='/company')
 
 
-@router.get("/", response_model=List[CompanySchema], dependencies=[Depends(jwt_bearer)])
+@router.get("/", response_model=CompanyResponse, dependencies=[Depends(jwt_bearer)])
 async def get_companies(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_async_session)):
     companies = await CompanyModel.get_by_fields(db, return_single=False, skip=skip, limit=limit, is_hidden=False)
 
     if not companies:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No records found')
 
-    return companies
+    count_companies = await CompanyModel.count_all(db)
+    count_pages = math.ceil(count_companies / limit)
+
+    return CompanyResponse(
+        data=companies,
+        count_pages=count_pages
+    )
 
 
 @router.get("/{company_id}/", response_model=CompanySchema, dependencies=[Depends(jwt_bearer)])

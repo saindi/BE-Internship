@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List
 
 from pydantic import BaseModel
 from pydantic_settings import SettingsConfigDict
@@ -15,6 +16,11 @@ class CompanySchema(BaseModel):
     updated_at: datetime
 
     model_config = SettingsConfigDict(from_attributes=True)
+
+
+class CompanyResponse(BaseModel):
+    data: List[CompanySchema]
+    count_pages: int
 
 
 class CompanyData(BaseModel):
