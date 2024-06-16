@@ -16,3 +16,7 @@ class RefreshTokenSchema(BaseModel):
 
 class TokenSchema(AccessTokenSchema, RefreshTokenSchema):
     pass
+
+
+class TokenSchemaResponse(TokenSchema):
+    id: int

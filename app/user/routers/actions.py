@@ -6,7 +6,7 @@ from fastapi.responses import StreamingResponse
 
 from auth.auth import jwt_bearer
 from company.models.models import CompanyModel, RequestModel, RoleModel, InvitationModel, RoleEnum
-from company.schemas import RequestSchema, InvitationSchema, RoleSchema, CompanySchema
+from company.schemas import RequestSchema, InvitationSchema, RoleSchema, CompanySchema, RequestToCompanyRequest
 from db.database import get_async_session
 from db.redis_actions import get_values_by_keys, get_value_by_keys
 from quiz.models.models import ResultTestModel
@@ -34,7 +34,7 @@ async def get_requests(
     return (await user.companies(db))[skip:limit]
 
 
-@router.get("/{user_id}/company/{company_id}/exit/", response_model=List[CompanySchema])
+@router.get("/{user_id}/company/{company_id}/exit/")
 async def exit_from_company(
         user_id: int,
         company_id: int,
@@ -56,7 +56,7 @@ async def exit_from_company(
     return await role.delete(db)
 
 
-@router.get("/{user_id}/requests/", response_model=List[RequestSchema])
+@router.get("/{user_id}/request/", response_model=List[RequestSchema])
 async def get_requests(user_id: int, user: UserModel = Depends(jwt_bearer), db: AsyncSession = Depends(get_async_session)):
     if not user.can_read(user_id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
@@ -67,14 +67,14 @@ async def get_requests(user_id: int, user: UserModel = Depends(jwt_bearer), db: 
 @router.post("/{user_id}/request/", response_model=RequestSchema, status_code=status.HTTP_201_CREATED)
 async def create_request(
         user_id: int,
-        company_id: int,
+        request: RequestToCompanyRequest,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
     if not user.can_edit(user_id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
 
-    company = await CompanyModel.get_by_id(db, company_id)
+    company = await CompanyModel.get_by_id(db, request.company_id)
 
     request = await user.add_request_to_company(db, company)
 
@@ -125,6 +125,8 @@ async def accept_invitation(
     role = RoleModel(id_user=invite.id_user, id_company=invite.id_company, role=RoleEnum.MEMBER)
 
     await role.create(db)
+
+    await invite.delete(db)
 
     return role
 

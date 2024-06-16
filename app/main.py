@@ -32,11 +32,11 @@ app.add_middleware(
 )
 
 
-@app.on_event("startup")
-async def startup_event():
-    logger.info("App startup...")
-
-    apscheduler_tasks.scheduler.start()
+# @app.on_event("startup")
+# async def startup_event():
+#     logger.info("App startup...")
+#
+#     apscheduler_tasks.scheduler.start()
 
 
 @app.on_event("shutdown")

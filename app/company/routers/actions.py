@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import StreamingResponse
 
 from auth.auth import jwt_bearer
-from company.schemas import InvitationSchema, RequestSchema, RoleSchema
+from company.schemas import InvitationSchema, RequestSchema, RoleSchema, InviteUserRequest
 from db.database import get_async_session
 from company.models.models import CompanyModel, InvitationModel, RequestModel, RoleModel, RoleEnum, FileNameEnum
 from db.redis_actions import get_values_by_keys
@@ -79,15 +79,13 @@ async def remove_admin(
 @router.get("/{company_id}/users/", response_model=List[UserSchema])
 async def get_users(
         company_id: int,
-        skip: int = 0,
-        limit: int = 100,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
-    company = await CompanyModel.get_by_fields(db, skip=skip, limit=limit, id=company_id)
+    company = await CompanyModel.get_by_id(db, company_id)
 
-    if not company.is_owner(user.id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
+    # if not company.is_owner(user.id):
+    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
 
     return company.users
 
@@ -115,7 +113,7 @@ async def kick_user(
     return await kick_role.delete(db)
 
 
-@router.get("/{company_id}/invitations/", response_model=List[InvitationSchema])
+@router.get("/{company_id}/invitation/", response_model=List[InvitationSchema])
 async def get_invitations(
         company_id: int,
         user: UserModel = Depends(jwt_bearer),
@@ -132,12 +130,12 @@ async def get_invitations(
 @router.post("/{company_id}/invitation/", response_model=InvitationSchema, status_code=status.HTTP_201_CREATED)
 async def create_invitation(
         company_id: int,
-        user_id: int,
+        invite_user: InviteUserRequest,
         user: UserModel = Depends(jwt_bearer),
         db: AsyncSession = Depends(get_async_session)
 ):
     company = await CompanyModel.get_by_id(db, company_id)
-    new_member = await UserModel.get_by_id(db, user_id)
+    new_member = await UserModel.get_by_id(db, invite_user.user_id)
 
     if not company.is_owner(user.id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No create permission')
@@ -197,6 +195,8 @@ async def accept_request(
     new_role = RoleModel(id_user=request.id_user, id_company=request.id_company, role=RoleEnum.MEMBER)
 
     await new_role.create(db)
+
+    await request.delete(db)
 
     return new_role
 

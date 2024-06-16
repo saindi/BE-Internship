@@ -60,3 +60,11 @@ class RoleSchema(BaseModel):
     id_company: int
     id_user: int
     role: RoleEnum
+
+
+class InviteUserRequest(BaseModel):
+    user_id: int
+
+
+class RequestToCompanyRequest(BaseModel):
+    company_id: int
