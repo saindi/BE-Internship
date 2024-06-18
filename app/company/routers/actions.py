@@ -11,7 +11,7 @@ from company.models.models import CompanyModel, InvitationModel, RequestModel, R
 from db.redis_actions import get_values_by_keys
 from quiz.schemas import QuizSchema, ResultData
 from user.models.models import UserModel
-from user.schemas import UserSchema
+from user.schemas import UserSchema, UserWithRoleInCompany
 from utils.generate_csv import generate_csv_data_as_results
 from analytic.routers.company import router as company_analytic_router
 
@@ -32,7 +32,7 @@ async def get_admins(company_id: int, db: AsyncSession = Depends(get_async_sessi
     return company.get_admins()
 
 
-@router.get("/{company_id}/admin/{user_id}/set/", response_model=RoleSchema)
+@router.get("/{company_id}/admin/{user_id}/set/", response_model=UserWithRoleInCompany)
 async def set_admin(
         company_id: int,
         user_id: int,
@@ -49,12 +49,30 @@ async def set_admin(
     if not role:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='User not found in the company')
 
+    if role.role == RoleEnum.OWNER:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='This user is owner')
+
     await role.update(db, {'role': RoleEnum.ADMIN})
+    user = await UserModel.get_by_id(db, user_id)
 
-    return role
+    user_with_role = UserWithRoleInCompany(
+        id=user.id,
+        email=user.email,
+        username=user.username,
+        hashed_password=user.hashed_password,
+        created_at=user.created_at,
+        updated_at=user.updated_at,
+        avatar=user.avatar,
+        is_active=user.is_active,
+        is_superuser=user.is_superuser,
+        is_verified=user.is_verified,
+        role=role.role
+    )
+
+    return user_with_role
 
 
-@router.get("/{company_id}/admin/{user_id}/remove/", response_model=RoleSchema)
+@router.get("/{company_id}/admin/{user_id}/remove/", response_model=UserWithRoleInCompany)
 async def remove_admin(
         company_id: int,
         user_id: int,
@@ -72,8 +90,23 @@ async def remove_admin(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='User not found in the company')
 
     await role.update(db, {'role': RoleEnum.MEMBER})
+    user = await UserModel.get_by_id(db, user_id)
 
-    return role
+    user_with_role = UserWithRoleInCompany(
+        id=user.id,
+        email=user.email,
+        username=user.username,
+        hashed_password=user.hashed_password,
+        created_at=user.created_at,
+        updated_at=user.updated_at,
+        avatar=user.avatar,
+        is_active=user.is_active,
+        is_superuser=user.is_superuser,
+        is_verified=user.is_verified,
+        role=role.role
+    )
+
+    return user_with_role
 
 
 @router.get("/{company_id}/users/", response_model=List[UserSchema])
@@ -89,6 +122,43 @@ async def get_users(
 
     return company.users
 
+
+@router.get("/{company_id}/users/roles/", response_model=List[UserWithRoleInCompany])
+async def get_users_with_roles(
+    company_id: int,
+    user: UserModel = Depends(jwt_bearer),
+    db: AsyncSession = Depends(get_async_session)
+):
+    company = await CompanyModel.get_by_id(db, company_id)
+
+    # if not company.is_owner(user.id):
+    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='No read permission')
+
+    users = company.users
+    roles = await RoleModel.get_by_fields(db, id_company=company_id, return_single=False)
+
+    users_with_roles = []
+    for user in users:
+        for role in roles:
+            if role.id_user == user.id:
+                user_with_role = UserWithRoleInCompany(
+                    id=user.id,
+                    email=user.email,
+                    username=user.username,
+                    hashed_password=user.hashed_password,
+                    created_at=user.created_at,
+                    updated_at=user.updated_at,
+                    avatar=user.avatar,
+                    is_active=user.is_active,
+                    is_superuser=user.is_superuser,
+                    is_verified=user.is_verified,
+                    role=role.role
+                )
+                users_with_roles.append(user_with_role)
+
+                continue
+
+    return users_with_roles
 
 @router.get("/{company_id}/kick/{user_id}/")
 async def kick_user(

@@ -6,6 +6,7 @@ from pydantic_core.core_schema import FieldValidationInfo
 from pydantic import BaseModel, EmailStr, field_validator
 from pydantic_settings import SettingsConfigDict
 
+from company.models.models import RoleEnum
 from user.models.models import StatusEnum
 from utils.hashing import Hasher
 
@@ -23,6 +24,10 @@ class UserSchema(BaseModel):
     is_verified: bool = False
 
     model_config = SettingsConfigDict(from_attributes=True)
+
+
+class UserWithRoleInCompany(UserSchema):
+    role: RoleEnum
 
 
 class UsersResponse(BaseModel):
