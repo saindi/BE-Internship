@@ -31,11 +31,11 @@ async def me(user: UserModel = Depends(jwt_bearer)):
     return user
 
 
-@router.post("/refresh_token", response_model=AccessTokenSchema)
-async def refresh_token(request: RefreshTokenSchema):
-    new_access_token = JWTBearer.verify_refresh_token(request.refresh_token)
+@router.post("/refresh_token/", response_model=AccessTokenSchema)
+async def refresh_token(request: RefreshTokenSchema, db: AsyncSession = Depends(get_async_session)):
+    new_access_token = await JWTBearer.verify_refresh_token(request.refresh_token, db)
 
     if not new_access_token:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or expired refresh token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired refresh token")
 
     return AccessTokenSchema(access_token=new_access_token)

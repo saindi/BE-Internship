@@ -5,6 +5,8 @@ import jwt
 
 from fastapi import Request, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from config import global_settings
 from auth.schemas import TokenSchema
 from db.database import async_session
@@ -97,9 +99,15 @@ class JWTBearer(HTTPBearer):
         return TokenSchema(access_token=access_token, refresh_token=refresh_token)
 
     @staticmethod
-    def verify_refresh_token(token: str) -> Optional[str]:
+    async def verify_refresh_token(token: str, db: AsyncSession) -> Optional[str]:
         try:
             decoded_token = jwt.decode(token, global_settings.jwt_secret, algorithms=global_settings.jwt_algorithm)
+
+            user = await UserModel.get_by_fields(db, email=decoded_token['email'])
+
+            if not user:
+                return None
+
             if decoded_token["expires"] >= time.time():
                 new_access_token = jwt.encode(
                     {"email": decoded_token["email"], "expires": time.time() + 60 * 60 * 24},
@@ -109,6 +117,7 @@ class JWTBearer(HTTPBearer):
                 return new_access_token
             else:
                 return None
+
         except jwt.exceptions.DecodeError:
             return None
         except jwt.exceptions.InvalidAlgorithmError:
