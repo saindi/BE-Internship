@@ -7,7 +7,7 @@ from analytic.models.models import AverageScoreGlobalModel
 from analytic.schemas import GlobalRatingSchema, QuizAnalyticByTime, LastPassQuizzes
 from auth.auth import jwt_bearer
 from db.database import get_async_session
-from quiz.models.models import ResultTestModel
+from quiz.models.models import ResultTestModel, QuizModel
 from quiz.schemas import ResultTestSchema
 from user.models.models import UserModel
 from utils.analytic import avarage_quiz_score_by_time, user_last_pass_quizzes
@@ -48,7 +48,7 @@ async def get_quiz_analytic(
     return analytic
 
 
-@router.get("/{user_id}/last_pass_quizzes/", response_model=List[LastPassQuizzes])
+@router.get("/{user_id}/last_pass_quizzes/")
 async def get_date_last_pass_quizzes(
         user_id: int,
         user: UserModel = Depends(jwt_bearer),
@@ -62,6 +62,14 @@ async def get_date_last_pass_quizzes(
     if not results:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User haven't taken the quizzes yet")
 
-    analytic = user_last_pass_quizzes([ResultTestSchema.model_validate(result).model_dump() for result in results])
+    quizzes = {}
+    for result in results:
+        quiz = await QuizModel.get_by_id(db, result.id_quiz)
+        quizzes[quiz.id] = quiz
+
+    analytic = user_last_pass_quizzes(
+        [ResultTestSchema.model_validate(result).model_dump() for result in results],
+        quizzes
+    )
 
     return analytic

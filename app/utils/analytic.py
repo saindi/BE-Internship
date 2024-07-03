@@ -17,7 +17,7 @@ def avarage_quiz_score_by_time(data):
     return result
 
 
-def user_last_pass_quizzes(data):
+def user_last_pass_quizzes(data, quizzes_data):
     last_pass_dates = {}
 
     for item in data:
@@ -25,15 +25,19 @@ def user_last_pass_quizzes(data):
         created_at_date = item['created_at']
 
         if id_quiz in last_pass_dates:
-            if created_at_date > last_pass_dates[id_quiz]:
-                last_pass_dates[id_quiz] = created_at_date
+            if created_at_date > last_pass_dates[id_quiz]["created_at"]:
+                last_pass_dates[id_quiz] = item
         else:
-            last_pass_dates[id_quiz] = created_at_date
+            last_pass_dates[id_quiz] = item
 
-    return [{'id_quiz': id_quiz, 'date_last_pass': last_pass_date} for id_quiz, last_pass_date in last_pass_dates.items()]
+    result = []
+    for id_quiz, data in last_pass_dates.items():
+         result.append({**data, "quiz_name": quizzes_data[id_quiz].name})
+
+    return result
 
 
-def company_users_last_pass_quizzes(data):
+def company_users_last_pass_quizzes(data, users_data, quizzes_data):
     data_by_user = {}
     for item in data:
         user = item['id_user']
@@ -48,6 +52,16 @@ def company_users_last_pass_quizzes(data):
             if result['created_at'] > time_last_pass:
                 time_last_pass = result['created_at']
 
-        user.append({'id_user': user_id, 'date_last_pass': time_last_pass})
+        result = {'id_user': user_id, 'date_last_pass': time_last_pass}
+
+        user_data = users_data.get(user_id)
+        if user_data:
+            result.update({"email": user_data.email, "username": user_data.username})
+
+        quiz_data = quizzes_data.get(user_id)
+        if user_data:
+            result.update({"quiz_name": quiz_data.name})
+
+        user.append(result)
 
     return user

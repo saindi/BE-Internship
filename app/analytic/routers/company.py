@@ -7,7 +7,7 @@ from analytic.schemas import QuizAnalyticByTime, UserLastPassQuiz
 from auth.auth import jwt_bearer
 from company.models.models import CompanyModel
 from db.database import get_async_session
-from quiz.models.models import ResultTestModel
+from quiz.models.models import ResultTestModel, QuizModel
 from quiz.schemas import ResultTestSchema
 from user.models.models import UserModel
 from utils.analytic import avarage_quiz_score_by_time, company_users_last_pass_quizzes
@@ -74,6 +74,16 @@ async def get_date_last_pass_company_quizzes(
     if not results:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User haven't taken the quizzes yet")
 
-    analytic = company_users_last_pass_quizzes([ResultTestSchema.model_validate(result).model_dump() for result in results])
+    users = {}
+    quizzes = {}
+    for result in results:
+        users[result.id_user] = await UserModel.get_by_id(db, result.id_user)
+        quizzes[result.id_user] = await QuizModel.get_by_id(db, result.id_quiz)
+
+    analytic = company_users_last_pass_quizzes(
+        [ResultTestSchema.model_validate(result).model_dump() for result in results],
+        users,
+        quizzes
+    )
 
     return analytic

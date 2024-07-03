@@ -1,6 +1,7 @@
 from datetime import date, datetime
+from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 class IdWithUser(BaseModel):
@@ -30,4 +31,7 @@ class LastPassQuizzes(BaseModel):
 
 class UserLastPassQuiz(BaseModel):
     id_user: int
+    email: Optional[EmailStr]
+    username: Optional[str]
+    quiz_name: Optional[str]
     date_last_pass: datetime
