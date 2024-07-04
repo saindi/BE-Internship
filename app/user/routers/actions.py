@@ -168,7 +168,7 @@ async def get_results(
 
 
 @router.get("/{user_id}/test_results/csv/")
-async def get_results_csv(user_id, user: UserModel = Depends(jwt_bearer)):
+async def get_results_csv(user_id: int, user: UserModel = Depends(jwt_bearer)):
     if not user.can_read(user_id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No permission")
 
