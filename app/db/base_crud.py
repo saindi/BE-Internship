@@ -51,7 +51,18 @@ class BaseCRUD(Base):
             limit: int = None,
             **kwargs
     ) -> List[TBase]:
-        filters = [getattr(cls, field) == value for field, value in kwargs.items()]
+        filters = []
+        for field, value in kwargs.items():
+            if isinstance(value, dict):
+                for op, val in value.items():
+                    if op == 'gt':
+                        filters.append(getattr(cls, field) > val)
+                    elif op == 'lt':
+                        filters.append(getattr(cls, field) < val)
+                    # Add more conditions as needed
+            else:
+                filters.append(getattr(cls, field) == value)
+
         query = select(cls).where(and_(*filters)).offset(skip).limit(limit).order_by(cls.id)
         result = await db.execute(query)
         instances = result.scalars().all()

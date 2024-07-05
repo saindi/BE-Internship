@@ -76,3 +76,12 @@ class NotificationSchema(BaseModel):
     updated_at: datetime
 
     model_config = SettingsConfigDict(from_attributes=True)
+
+    def dict(self, **kwargs):
+        data = super().model_dump(**kwargs)
+
+        data['status'] = data['status'].value
+        data['created_at'] = data['created_at'].isoformat()
+        data['updated_at'] = data['updated_at'].isoformat()
+
+        return data

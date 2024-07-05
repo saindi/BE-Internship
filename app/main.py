@@ -5,7 +5,6 @@ from fastapi.staticfiles import StaticFiles
 
 from log import logger
 from config import global_settings
-from tasks import apscheduler_tasks
 from user.routers.crud import router as user_crud_router
 from user.routers.actions import router as user_actions_router
 from auth.router import router as auth_router
@@ -14,6 +13,7 @@ from company.routers.actions import router as company_actions_router
 from quiz.routers.quiz import router as quiz_crud_router
 from quiz.routers.question import router as question_crud_router
 from media_control.routers import router as media_router
+from stream.routers.notifications import router as notifications_socket_router
 
 app = FastAPI()
 
@@ -66,6 +66,8 @@ app.include_router(quiz_crud_router, tags=["Quiz"])
 app.include_router(question_crud_router, tags=["Question"])
 
 app.include_router(media_router, tags=["Media"])
+
+app.include_router(notifications_socket_router)
 
 
 app.mount("/media", StaticFiles(directory="media"), name="media")

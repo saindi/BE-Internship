@@ -3,7 +3,7 @@ from typing import Optional
 
 import jwt
 
-from fastapi import Request, HTTPException, status
+from fastapi import Request, WebSocket, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -157,4 +157,31 @@ class JWTBearer(HTTPBearer):
             return None
 
 
+class JWTBearerWebsocket(JWTBearer):
+    async def __call__(self,  websocket: WebSocket):
+        auth_header = websocket.headers.get('Authorization')
+
+        if auth_header is None:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Authorization header missing")
+
+        scheme, token = auth_header.split()
+
+        credentials = HTTPAuthorizationCredentials(scheme=scheme, credentials=token)
+
+        if credentials:
+            if not credentials.scheme == "Bearer":
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication scheme.")
+
+            user = await self.verify(credentials.credentials)
+
+            if not user:
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token or expired token.")
+
+            return user
+
+        else:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authorization code.")
+
+
 jwt_bearer = JWTBearer()
+jwt_bearer_websocket = JWTBearerWebsocket()
