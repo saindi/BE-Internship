@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+import logging
 
 from celery import Celery
 from celery.schedules import crontab
@@ -11,7 +12,8 @@ from user.models.models import UserModel, NotificationModel
 
 celery = Celery('tasks', broker=global_settings.redis_url, backend=global_settings.redis_url)
 
-celery.conf.timezone = 'Europe/Kiev'
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 @celery.task()
@@ -56,9 +58,19 @@ def check_for_need_pass_quizzes_users():
     session.close()
 
 
+@celery.task()
+def log_message():
+    """A task to log a message every 30 seconds"""
+    logger.info("The log_message task is executed every 30 seconds.")
+
+
 celery.conf.beat_schedule = {
     'check_last_pass_quiz': {
         'task': 'tasks.celery_tasks.check_for_need_pass_quizzes_users',
         'schedule': crontab(hour=0, minute=0),
+    },
+    'log_message_every_30_seconds': {
+        'task': 'tasks.celery_tasks.log_message',
+        'schedule': timedelta(seconds=30),
     }
 }

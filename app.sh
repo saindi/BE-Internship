@@ -1,5 +1,7 @@
 #!/bin/bash
 
+sleep 15
+
 alembic upgrade head
 
 cd app

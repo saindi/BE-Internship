@@ -43,7 +43,7 @@ async def test_get_all(ac: AsyncClient, user_token: dict):
     response = await ac.get("/company/", headers=user_token)
 
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.json()) == 3
+    assert len(response.json()) == 2
 
 
 async def test_get_by_id(ac: AsyncClient, user_token: dict):

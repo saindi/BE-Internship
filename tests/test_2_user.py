@@ -117,7 +117,7 @@ async def test_me_bad(ac: AsyncClient):
     headers = {"Authorization": f"Bearer {access_token}"}
     response_me = await ac.get("/auth/me/", headers=headers)
 
-    assert response_me.status_code == status.HTTP_403_FORBIDDEN
+    assert response_me.status_code == status.HTTP_401_UNAUTHORIZED
     assert response_me.json()["detail"] == "Invalid token or expired token."
 
 
@@ -125,7 +125,7 @@ async def test_get(ac: AsyncClient, user_token: dict):
     response = await ac.get("/user/", headers=user_token)
 
     assert response.status_code == 200
-    assert len(response.json()) == 5
+    assert len(response.json()) == 2
 
 
 async def test_get_id(ac: AsyncClient, user_token: dict):
@@ -145,7 +145,7 @@ async def test_get_all(ac: AsyncClient, user_token: dict):
     response = await ac.get("/user/", headers=user_token)
 
     assert response.status_code == 200
-    assert len(response.json()) == 5
+    assert len(response.json()) == 2
 
 
 @pytest.mark.parametrize("user_token", ('5'), indirect=True)

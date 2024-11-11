@@ -6,11 +6,11 @@ from fastapi import status
 
 @pytest.mark.parametrize('user_token', ('3'), indirect=True)
 async def test_request(ac: AsyncClient, user_token: dict):
-    response_1 = await ac.post("/user/3/request/", params={
+    response_1 = await ac.post("/user/3/request/", json={
         "company_id": 1,
     }, headers=user_token)
 
-    response_2 = await ac.post("/user/3/request/", params={
+    response_2 = await ac.post("/user/3/request/", json={
         "company_id": 3,
     }, headers=user_token)
 
