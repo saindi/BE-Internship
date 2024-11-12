@@ -1,4 +1,3 @@
-from base64 import b64encode
 from datetime import datetime
 from typing import Optional
 
@@ -6,6 +5,7 @@ from pydantic_core.core_schema import FieldValidationInfo
 from pydantic import BaseModel, EmailStr, field_validator
 from pydantic_settings import SettingsConfigDict
 
+from auth.schemas import TokenSchema
 from company.models.models import RoleEnum
 from user.models.models import StatusEnum
 from utils.hashing import Hasher
@@ -24,6 +24,10 @@ class UserSchema(BaseModel):
     is_verified: bool = False
 
     model_config = SettingsConfigDict(from_attributes=True)
+
+
+class UserWithToken(UserSchema, TokenSchema):
+    pass
 
 
 class UserWithRoleInCompany(UserSchema):

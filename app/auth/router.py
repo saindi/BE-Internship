@@ -3,14 +3,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.database import get_async_session
 from auth.auth import jwt_bearer, JWTBearer
-from auth.schemas import TokenSchema, LoginSchema, AccessTokenSchema, RefreshTokenSchema, TokenSchemaResponse
+from auth.schemas import LoginSchema, AccessTokenSchema, RefreshTokenSchema
 from user.models.models import UserModel
-from user.schemas import UserSchema
+from user.schemas import UserSchema, UserWithToken
 
 router = APIRouter(prefix='/auth')
 
 
-@router.post("/login/", response_model=TokenSchemaResponse)
+@router.post("/login/", response_model=UserWithToken)
 async def login(request: LoginSchema, db: AsyncSession = Depends(get_async_session)):
     user = await UserModel.get_by_fields(db, email=request.email)
 
@@ -19,8 +19,17 @@ async def login(request: LoginSchema, db: AsyncSession = Depends(get_async_sessi
 
     tokes = jwt_bearer.sign_jwt(user.email)
 
-    return TokenSchemaResponse(
+    return UserWithToken(
         id=user.id,
+        email=user.email,
+        username=user.username,
+        hashed_password=user.hashed_password,
+        created_at=user.created_at,
+        updated_at=user.updated_at,
+        avatar=user.avatar,
+        is_active=user.is_active,
+        is_superuser=user.is_superuser,
+        is_verified=user.is_verified,
         access_token=tokes.access_token,
         refresh_token=tokes.refresh_token,
     )
