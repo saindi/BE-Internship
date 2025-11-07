@@ -1,4 +1,4 @@
-# Internship
+# TestHub_API 
 
 This is a training project. It was made using _Fastapi_ + _PostgreSQL_ + _Redis_ + _AWS_ + _Unittest_ + _Docker_.
 

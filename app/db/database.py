@@ -5,10 +5,16 @@ from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 from config import global_settings
 
+from sqlalchemy.ext.asyncio import create_async_engine
+
 engine = create_async_engine(
     global_settings.postgresql_url,
     echo=False,
-    future=True
+    future=True,
+    pool_size=10,
+    max_overflow=20,
+    pool_timeout=60,
+    pool_recycle=1800
 )
 
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False, future=True)
